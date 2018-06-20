@@ -7,7 +7,7 @@ output:
 getwd()
 setwd()
 ```
-**Relative** - `setwd("./data")`, `setwd("../")` (Move up one directory)
+**Relative** - `setwd("./data")`, `setwd("../")` (Move up one directory)  
 **Absolute** - `setwd("/Users/jtleek/data/")` "/" for path in windows
 ## Checking for and creating directories
 ```{r}
