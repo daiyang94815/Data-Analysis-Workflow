@@ -1,5 +1,55 @@
 ---
 title: "Data Analysis Workflow"
-output: html_notebook
+output:
 ---
+# Step 0 Set working directory
+```{r}
+getwd()
+setwd()
+```
+**Relative** - `setwd("./data")`, `setwd("../")` (Move up one directory)
+**Absolute** - `setwd("/Users/jtleek/data/")` "/" for path in windows
+## Checking for and creating directories
+```{r}
+# check to see if the directory exists
+file.exists("directoryName") 
+# create a directory if it doesn't exist
+dir.create("directoryName") 
 
+# an example checking for a "data" directory and creating it if it doesn't exist
+if(!file.exists("data")){
+  dir.create("data")
+}
+```
+# Step 1 Get data
+## From the internet
+```{r}
+# Download the file
+fileUrl <- "https://data.baltimorecity.gov/api/views/dz54-2aru/rows.csv?accessType=DOWNLOAD"
+download.file(fileUrl,destfile="./data/cameras.csv",mode = 'wb')
+
+# Check the downloaded file
+list.files("./data")
+# Record the date downloaded
+dateDownloaded <- date()
+dateDownloaded
+```
+## From local flat files
+### read.table
+```{r}
+cameraData <- read.table("./data/cameras.csv",sep=",",header=TRUE)
+```
+Important parameters
+- *file*
+- *header*
+- *sep* - delimiter
+- *row.names*
+- *nrows* - how many rows to read of the file (e.g. nrows=10 reads 10 lines)
+- *quote* - whether there are any quoted values, quote="" means no quotes
+- *na.strings* - set the character that represents a missing value
+- *skip* - number of lines to skip before starting to read
+### read.csv
+```{r}
+cameraData <- read.csv("./data/cameras.csv")
+```
+`read.csv` sets *sep=","* and *header=TRUE*
