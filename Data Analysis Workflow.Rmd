@@ -9,7 +9,7 @@ setwd()
 ```
 **Relative** - `setwd("./data")`, `setwd("../")` (Move up one directory)  
 **Absolute** - `setwd("/Users/jtleek/data/")` "/" for path in windows
-## Checking for and creating directories
+## Check for and create directories
 ```{r}
 # check to see if the directory exists
 file.exists("directoryName") 
@@ -21,6 +21,87 @@ if(!file.exists("data")){
   dir.create("data")
 }
 ```
+# Packages
+## {data.table}
+Much, much faster at subsetting, group, and updating
+### Create data tables just like data frames
+```{r}
+library(data.table)
+DF = data.frame(x=rnorm(9),y=rep(c("a","b","c"),each=3),z=rnorm(9))
+head(DF,3)
+DT = data.table(x=rnorm(9),y=rep(c("a","b","c"),each=3),z=rnorm(9))
+head(DT,3)
+```
+### See all the data tables in memory
+```{r}
+tables()
+```
+### Subset rows
+```{r}
+DT[2,]
+DT[DT$y=="a",]
+```
+### Subsetting is based on rows (not columns like DF[c(2,3)])
+```{r}
+DT[c(2,3)]
+```
+**Data table use expression after comma**
+### Calculate values for variables with expressions
+```{r}
+DT[,list(mean(x),sum(z))]
+DT[,table(y)]
+```
+### Add new columns
+```{r}
+DT[,w:=z^2]
+```
+**When add a new variable to a data table, a new copy isn't being created.  If you're trying to create a copy, you have to explicitly do that with the copy function.** 
+### Multiple operations
+```{r}
+DT[,m:= {tmp <- (x+z); log2(tmp+5)}]
+```
+### plyr like operations
+```{r}
+DT[,a:=x>0]
+```
+
+```{r}
+DT[,b:= mean(x+w),by=a]
+```
+*by=a* aggregated/grouped by a. Then add aggregated values (mean in this case) of different groups to each row of b.
+### Special variables
+`.N` An integer, length 1, containing the number of elements (counts) of a factor level
+```{r}
+set.seed(123);
+DT <- data.table(x=sample(letters[1:3], 1E5, TRUE))
+DT[, .N, by=x]
+```
+### Keys
+#### To subset
+```{r}
+DT <- data.table(x=rep(c("a","b","c"),each=100), y=rnorm(300))
+setkey(DT, x)
+DT['a']
+```
+#### To Join(merge)
+```{r}
+DT1 <- data.table(x=c('a', 'a', 'b', 'dt1'), y=1:4)
+DT2 <- data.table(x=c('a', 'b', 'dt2'), z=5:7)
+setkey(DT1, x); setkey(DT2, x)
+merge(DT1, DT2)
+```
+### Fast reading from disk
+```{r}
+big_df <- data.frame(x=rnorm(1E6), y=rnorm(1E6))
+file <- tempfile()
+write.table(big_df, file=file, row.names=FALSE, col.names=TRUE, sep="\t", quote=FALSE)
+system.time(fread(file))
+system.time(read.table(file, header=TRUE, sep="\t"))
+```
+fread command could be applied to reading data tables, a substitute for read.table with tab separated files
+### Further resources
+- [Latest development of data.table](https://github.com/Rdatatable/data.table/wiki)
+- [A list of differences between data.table and data.frame](https://stackoverflow.com/questions/13618488/what-you-can-do-with-data-frame-that-you-cant-in-data-table)
 # Step 1 Get data
 ## From the internet
 ```{r}
@@ -60,14 +141,15 @@ download.file(fileUrl,destfile="./data/cameras.xlsx",mode="wb")
 library(readxl)
 cameraData <- read_excel("./data/cameras.xlsx",sheet=1,col_names = TRUE,range=cell_limits(ul=c(18,7),lr=c(23,15)))
 ```
-## From XML
+## From XML or Html
 ### {XML}
 ```{r}
 library(XML)
 fileUrl <- "http://www.w3schools.com/xml/simple.xml"
-doc <- xmlTreeParse(fileUrl,useInternal=TRUE)
+doc <- xmlTreeParse(fileUrl,useInternal=TRUE) # or htmlTreeParse() if from Html
 ```
-#### Inspect data from XML
+*useInternal=TRUE* get all the different nodes inside of the file
+#### Inspect data 
 ```{r}
 # get rootNode, the wrapper for the entire document
 rootNode <- xmlRoot(doc)
@@ -76,6 +158,7 @@ xmlName(rootNode)
 # get all the nested elements within the rootNode
 names(rootNode)
 ```
+
 ```{r}
 # Directly access parts of the XML document
 rootNode[[1]]
@@ -97,5 +180,83 @@ To be more specific, use [XPath](http://www.stat.berkeley.edu/~statcur/Workshop2
 xpathSApply(rootNode,"//name",xmlValue)
 xpathSApply(rootNode,"//price",xmlValue)
 ```
+##### Extract content by attributes
+```{r}
+# example
+fileUrl <- "http://espn.go.com/nfl/team/_/name/bal/baltimore-ravens"
+doc <- htmlTreeParse(fileUrl,useInternal=TRUE)
+scores <- xpathSApply(doc,"//li[@class='score']",xmlValue)
+teams <- xpathSApply(doc,"//li[@class='team-name']",xmlValue)
+```
+#### Notes and further resources
+- Official XML tutorials [short](http://www.omegahat.org/RSXML/shortIntro.pdf), [long](http://www.omegahat.org/RSXML/shortIntro.pdf)
+- [An outstanding guide to the XML package](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)
+## From JSON
+### {jsonlite}
+```{r}
+library(jsonlite)
+jsonData <- fromJSON("https://api.github.com/users/jtleek/repos")
+```
+#### Inspect data (nested objects)
+```{r}
+names(jsonData)
+jsonData$name
 
-
+names(jsonData$owner)
+jsonData$owner$login
+```
+#### Writing data frames to JSON
+```{r}
+myjson <- toJSON(iris, pretty=TRUE)
+# print the data
+cat(myjson)
+```
+*pretty=TRUE* give nice indentations so it's easy to read
+#### Further resources
+- [http://www.json.org/](http://www.json.org/)
+- [A good tutorial on jsonlite](https://www.r-bloggers.com/new-package-jsonlite-a-smarter-json-encoderdecoder/)
+- [jsonlite vignette](https://cran.r-project.org/web/packages/jsonlite/vignettes/json-mapping.pdf)
+## From MySQL
+### {RMySQL}
+#### Connect and list databases
+```{r}
+library(RMySQL)
+ucscDb <- dbConnect(MySQL(),user="genome", 
+                    host="genome-mysql.cse.ucsc.edu")
+result <- dbGetQuery(ucscDb,"show databases;"); dbDisconnect(ucscDb)
+```
+#### Connect to specific database and list tables
+```{r}
+hg19 <- dbConnect(MySQL(),user="genome", db="hg19",
+                    host="genome-mysql.cse.ucsc.edu")
+allTables <- dbListTables(hg19)
+length(allTables)
+allTables[1:5]
+```
+#### Get dimensions of a specific table
+```{r}
+# get column names
+dbListFields(hg19,"affyU133Plus2")
+# get number of rows
+dbGetQuery(hg19, "select count(*) from affyU133Plus2")
+```
+#### Read from the table
+```{r}
+affyData <- dbReadTable(hg19, "affyU133Plus2")
+head(affyData)
+```
+##### Select a specific subset
+```{r}
+query <- dbSendQuery(hg19, "select * from affyU133Plus2 where misMatches between 1 and 3")
+affyMis <- fetch(query)
+affyMisSmall <- fetch(query,n=10); dbClearResult(query)
+dim(affyMisSmall)
+```
+#### Close the connection
+```{r}
+dbDisconnect(hg19)
+```
+#### Further resources
+- [RMySQL vignette](https://cran.r-project.org/web/packages/RMySQL/RMySQL.pdf)
+- [List of MySQL commands](http://www.pantz.org/software/mysql/mysqlcommands.html)
+- A nice blog post summarizing [some other commands](https://www.r-bloggers.com/mysql-and-r/)
