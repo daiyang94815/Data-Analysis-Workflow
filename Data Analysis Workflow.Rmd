@@ -53,3 +53,43 @@ Important parameters
 cameraData <- read.csv("./data/cameras.csv")
 ```
 `read.csv` sets *sep=","* and *header=TRUE*
+## From Excel files
+### read_excel {readxl}
+```{r}
+download.file(fileUrl,destfile="./data/cameras.xlsx",mode="wb")
+library(readxl)
+cameraData <- read_excel("./data/cameras.xlsx",sheet=1,col_names = TRUE,range=cell_limits(ul=c(18,7),lr=c(23,15)))
+```
+## From XML
+### {XML}
+```{r}
+library(XML)
+fileUrl <- "http://www.w3schools.com/xml/simple.xml"
+doc <- xmlTreeParse(fileUrl,useInternal=TRUE)
+```
+#### Inspect data from XML
+```{r}
+# get rootNode, the wrapper for the entire document
+rootNode <- xmlRoot(doc)
+# get the name of the document
+xmlName(rootNode)
+# get all the nested elements within the rootNode
+names(rootNode)
+```
+
+```{r}
+# Directly access parts of the XML document
+rootNode[[1]]
+# access subcomponent
+rootNode[[1]][[1]]
+```
+#### Programatically extract parts of the file
+```{r}
+# get all values
+xmlSApply(rootNode,xmlValue)
+```
+To be more specific, use [XPath](http://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)
+```{r}
+
+```
+
