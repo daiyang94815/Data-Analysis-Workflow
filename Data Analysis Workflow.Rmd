@@ -76,7 +76,6 @@ xmlName(rootNode)
 # get all the nested elements within the rootNode
 names(rootNode)
 ```
-
 ```{r}
 # Directly access parts of the XML document
 rootNode[[1]]
@@ -89,7 +88,14 @@ rootNode[[1]][[1]]
 xmlSApply(rootNode,xmlValue)
 ```
 To be more specific, use [XPath](http://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)
+- */node* Top level node
+- *//node* Node at any level
+- *node[@attr-name]* Node with an attribute name
+- *node[@attr-name='bob']* Node with attribute name attr-name='bob'
 ```{r}
-
+# examples
+xpathSApply(rootNode,"//name",xmlValue)
+xpathSApply(rootNode,"//price",xmlValue)
 ```
+
 
