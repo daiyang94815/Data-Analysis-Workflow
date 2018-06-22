@@ -68,7 +68,7 @@ DT[,a:=x>0]
 ```{r}
 DT[,b:= mean(x+w),by=a]
 ```
-*by=a* aggregated/grouped by a. Then add aggregated values (mean in this case) of different groups to each row of b.
+`by=a` aggregated/grouped by a. Then add aggregated values (mean in this case) of different groups to each row of b.
 ### Special variables
 `.N` An integer, length 1, containing the number of elements (counts) of a factor level
 ```{r}
@@ -98,11 +98,13 @@ write.table(big_df, file=file, row.names=FALSE, col.names=TRUE, sep="\t", quote=
 system.time(fread(file))
 system.time(read.table(file, header=TRUE, sep="\t"))
 ```
-fread command could be applied to reading data tables, a substitute for read.table with tab separated files
+`fread()` could be applied to reading data tables, a substitute for `read.table()` with tab separated files
 ### Further resources
 - [Latest development of data.table](https://github.com/Rdatatable/data.table/wiki)
 - [A list of differences between data.table and data.frame](https://stackoverflow.com/questions/13618488/what-you-can-do-with-data-frame-that-you-cant-in-data-table)
-# Step 1 Get data
+## {sqldf}
+sqldf package allows for execution of SQL commands on R data frames
+# Step 1 Get the data
 ## From the internet
 ```{r}
 # Download the file
@@ -121,19 +123,19 @@ dateDownloaded
 cameraData <- read.table("./data/cameras.csv",sep=",",header=TRUE)
 ```
 Important parameters
-- *file*
-- *header*
-- *sep* - delimiter
-- *row.names*
-- *nrows* - how many rows to read of the file (e.g. nrows=10 reads 10 lines)
-- *quote* - whether there are any quoted values, quote="" means no quotes
-- *na.strings* - set the character that represents a missing value
-- *skip* - number of lines to skip before starting to read
+- `file`
+- `header`
+- `sep` - delimiter
+- `row.names`
+- `nrows` - how many rows to read of the file (e.g. nrows=10 reads 10 lines)
+- `quote` - whether there are any quoted values, quote="" means no quotes
+- `na.strings` - set the character that represents a missing value
+- `skip` - number of lines to skip before starting to read
 ### read.csv
 ```{r}
 cameraData <- read.csv("./data/cameras.csv")
 ```
-`read.csv` sets *sep=","* and *header=TRUE*
+`read.csv` sets `sep=","` and `header=TRUE`
 ## From Excel files
 ### read_excel {readxl}
 ```{r}
@@ -148,8 +150,8 @@ library(XML)
 fileUrl <- "http://www.w3schools.com/xml/simple.xml"
 doc <- xmlTreeParse(fileUrl,useInternal=TRUE) # or htmlTreeParse() if from Html
 ```
-*useInternal=TRUE* get all the different nodes inside of the file
-#### Inspect data 
+`useInternal=TRUE` get all the different nodes inside of the file
+#### Inspect the data 
 ```{r}
 # get rootNode, the wrapper for the entire document
 rootNode <- xmlRoot(doc)
@@ -171,10 +173,10 @@ rootNode[[1]][[1]]
 xmlSApply(rootNode,xmlValue)
 ```
 To be more specific, use [XPath](http://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)
-- */node* Top level node
-- *//node* Node at any level
-- *node[@attr-name]* Node with an attribute name
-- *node[@attr-name='bob']* Node with attribute name attr-name='bob'
+- `/node` Top level node
+- `//node` Node at any level
+- `node[@attr-name]` Node with an attribute name
+- `node[@attr-name='bob']` Node with attribute name attr-name='bob'
 ```{r}
 # examples
 xpathSApply(rootNode,"//name",xmlValue)
@@ -197,7 +199,7 @@ teams <- xpathSApply(doc,"//li[@class='team-name']",xmlValue)
 library(jsonlite)
 jsonData <- fromJSON("https://api.github.com/users/jtleek/repos")
 ```
-#### Inspect data (nested objects)
+#### Inspect the data (nested objects)
 ```{r}
 names(jsonData)
 jsonData$name
@@ -211,7 +213,7 @@ myjson <- toJSON(iris, pretty=TRUE)
 # print the data
 cat(myjson)
 ```
-*pretty=TRUE* give nice indentations so it's easy to read
+`pretty=TRUE` give nice indentations so it's easy to read
 #### Further resources
 - [http://www.json.org/](http://www.json.org/)
 - [A good tutorial on jsonlite](https://www.r-bloggers.com/new-package-jsonlite-a-smarter-json-encoderdecoder/)
@@ -260,3 +262,534 @@ dbDisconnect(hg19)
 - [RMySQL vignette](https://cran.r-project.org/web/packages/RMySQL/RMySQL.pdf)
 - [List of MySQL commands](http://www.pantz.org/software/mysql/mysqlcommands.html)
 - A nice blog post summarizing [some other commands](https://www.r-bloggers.com/mysql-and-r/)
+## From HDF5
+### {rhdf5}
+```{r}
+source("http://bioconductor.org/biocLite.R")
+biocLite("rhdf5")
+library(rhdf5)
+```
+#### Create HDF5 file
+```{r}
+created = h5createFile("example.h5")
+```
+##### Create groups
+```{r}
+created = h5createGroup("example.h5","foo")
+created = h5createGroup("example.h5","baa")
+created = h5createGroup("example.h5","foo/foobaa")
+h5ls("example.h5")
+```
+##### Write to groups
+```{r}
+A = matrix(1:10,nr=5,nc=2)
+h5write(A, "example.h5","foo/A")
+B = array(seq(0.1,2.0,by=0.1),dim=c(5,2,2))
+attr(B, "scale") <- "liter"
+h5write(B, "example.h5","foo/foobaa/B")
+h5ls("example.h5")
+```
+##### Write a data set
+```{r}
+df = data.frame(1L:5L,seq(0,1,length.out=5),
+  c("ab","cde","fghi","a","s"), stringsAsFactors=FALSE)
+h5write(df, "example.h5","df")
+h5ls("example.h5")
+```
+#### Read data
+```{r}
+readA = h5read("example.h5","foo/A")
+readB = h5read("example.h5","foo/foobaa/B")
+readdf= h5read("example.h5","df")
+readA
+```
+#### Write and read chunks(subsets)
+```{r}
+h5write(c(12,13,14),"example.h5","foo/A",index=list(1:3,1))
+h5read("example.h5","foo/A")
+```
+`index=list(1:3,1)` give you indices for the dimensions to read/write
+#### Further resources
+- [The rhdf5 tutorial](http://www.bioconductor.org/packages/release/bioc/html/rhdf5.html)
+- The HDF group has [informaton on HDF5 in general](https://portal.hdfgroup.org/display/HDF5/HDF5)
+## From Web
+### readLines()
+```{r}
+# open a connection
+con = url("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
+htmlCode = readLines(con)
+# close the connection
+close(con)
+```
+### {XML}
+```{r}
+library(XML)
+url <- "http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en"
+html <- htmlTreeParse(url, useInternalNodes=T)
+
+xpathSApply(html, "//title", xmlValue)
+xpathSApply(html, "//td[@id='col-citedby']", xmlValue)
+```
+`useInternalNodes=T` gets the complete structure out
+### GET() from {httr}
+```{r}
+library(httr)
+# GET the URL
+html2 = GET(url)
+# extract the content from that HTML page as a text
+content2 = content(html2,as="text")
+# parse the content
+parsedHtml = htmlParse(content2,asText=TRUE)
+xpathSApply(parsedHtml, "//title", xmlValue)
+```
+#### Access websites with passwords
+```{r}
+pg2 = GET("http://httpbin.org/basic-auth/user/passwd",
+    authenticate("user","passwd"))
+```
+##### Use handles (to store authentication)
+```{r}
+google = handle("http://google.com")
+pg1 = GET(handle=google,path="/")
+pg2 = GET(handle=google,path="search")
+```
+#### Further resources
+- [R Bloggers](https://www.r-bloggers.com/) has a number of examples of web scraping
+- The [httr help file](https://cran.r-project.org/web/packages/httr/httr.pdf) has useful examples
+## From APIs
+### {httr}
+#### Access Website from R
+```{r}
+# example 1: Twitter
+library(httr)
+myapp = oauth_app("twitter",
+                   key="yourConsumerKeyHere",secret="yourConsumerSecretHere")
+sig = sign_oauth1.0(myapp,
+                     token = "yourTokenHere",
+                      token_secret = "yourTokenSecretHere")
+homeTL = GET("https://api.twitter.com/1.1/statuses/home_timeline.json", sig)
+```
+
+```{r}
+# example 2: GitHub
+# 1. Find OAuth settings for github:
+#    http://developer.github.com/v3/oauth/
+oauth_endpoints("github")
+# 2. To make your own application, register at 
+#    https://github.com/settings/developers. Use any URL for the homepage URL
+#    (http://github.com is fine) and  http://localhost:1410 as the callback url
+#    Replace your key and secret below.
+myapp <- oauth_app("datasciencespecialization",
+                   key = "key",
+                   secret = "secret")
+# 3. Get OAuth credentials
+github_token <- oauth2.0_token(oauth_endpoints("github"), myapp)
+# 4. Use API
+gtoken <- config(token = github_token)
+req <- GET("https://api.github.com/users/jtleek/repos", gtoken)
+stop_for_status(req)
+content(req)
+# OR:
+req <- with_config(gtoken, GET("https://api.github.com/users/jtleek/repos"))
+stop_for_status(req)
+content(req)
+```
+#### Convert the json object
+```{r}
+# example 1
+# return a structured R object, which is a little bit hard to read
+json1 = content(homeTL)
+```
+### {jsonlite}
+```{r}
+# example 1
+# reformat it as a data frame where each row corresponds to a tweet in the user's timeline
+json2 = jsonlite::fromJSON(toJSON(json1))
+```
+
+```{r}
+# example 2
+library(jsonlite)
+repo <- fromJSON(toJSON(content(req)))
+```
+## From image
+- [jpeg](https://cran.r-project.org/web/packages/jpeg/index.html)
+- [readbitmap](https://cran.r-project.org/web/packages/readbitmap/index.html)
+- [png](https://cran.r-project.org/web/packages/png/index.html)
+- [EBImage (Bioconductor)](http://www.bioconductor.org/packages/2.13/bioc/html/EBImage.html)
+## From GIS data
+- [rgdal](https://cran.r-project.org/web/packages/rgdal/index.html)
+- [rgeos](https://cran.r-project.org/web/packages/rgeos/index.html)
+- [raster](https://cran.r-project.org/web/packages/raster/index.html)
+## From music data
+- [tuneR](https://cran.r-project.org/web/packages/tuneR/)
+- [seewave](http://rug.mnhn.fr/seewave/)
+# Step 2 Clean the data
+## Subset
+```{r}
+# subset by colunmns, x is a data frame
+X[,1]
+# or
+X[1]
+# or
+X[,'var1']
+
+# subset by rows and colunmns
+X[1:2,'var2']
+```
+### select(), filter() from {dplyr} or {tidyverse}
+```{r}
+donor %>% filter(amount > 100)
+donor %>% filter(! type %in% 'Candidate')
+```
+Operators for conditions: `!, %in%, >, >=, <, <=, ==, &, |`
+```{r}
+select(chicago, 1:5)
+select(chicago, city:dptp)
+select(chicago, -(city:dptp))
+```
+### Logicals (and, or, %in%)
+```{r}
+X[(X$var1 <= 3 & X$var3 > 11),]
+X[(X$var1 <= 3 | X$var3 > 15),]
+restData[restData$zipCode %in% c("21212","21213"),]
+```
+
+### Deal with missing values
+```{r}
+X[which(X$var2 > 8),]
+```
+`which()` returns the indices where conditions are met
+## Reorder
+### arrange() from {dplyr} or {tidyverse}
+```{r}
+arrange(chicago, desc(date))
+```
+### sort()
+```{r}
+sort(X$var1)
+sort(X$var1,decreasing=TRUE)
+sort(X$var2,na.last=TRUE)
+```
+### order()
+```{r}
+X[order(X$var1),]
+X[order(X$var1,X$var3),]
+```
+`order()` returns a permutation which rearranges its first argument into ascending or descending order, breaking ties by further arguments.
+### {plyr}
+```{r}
+library(plyr)
+arrange(X,var1)
+arrange(X,desc(var1))
+```
+## Add rows and columns
+```{r}
+X$var4 <- rnorm(5)
+```
+### Binding from {dplyr} or {tidyverse}
+Append z to y as new rows. 
+```{r}
+bind_rows(y, z) 
+```
+Append z to y as new columns.
+```{r}
+bind_cols(y, z) 
+```
+Caution: matches rows by position.
+### cbind() and rbind()
+```{r}
+Y <- cbind(X,rnorm(5))
+```
+## Rename() from {dplyr} or {tidyverse}
+```{r}
+rename(chicago, dewpoint = dptp, pm25 = pm25tmean2)
+```
+## Create new variables
+### mutate() from {dplyr} or {tidyverse}
+```{r}
+library(tidyverse)
+restData2 = mutate(restData,zipGroups=cut2(zipCode,g=4))
+```
+### Create sequences
+```{r}
+s1 <- seq(1,10,by=2)
+s2 <- seq(1,10,length=3)
+x <- c(1,3,8,25,100); seq(along = x)
+```
+### Create binary variables
+```{r}
+restData$nearMe = restData$neighborhood %in% c("Roland Park", "Homeland")
+restData$zipWrong = ifelse(restData$zipCode < 0, TRUE, FALSE)
+```
+### Create categorical variables
+```{r}
+restData$zipGroups = cut(restData$zipCode,breaks=quantile(restData$zipCode))
+```
+apply `cut()` to quantitative variable (zipCode). `breaks=` break up according to a list of value (the quantiles to that zip code). Returns a factor variable.
+#### cut2() from {Hmisc}
+```{r}
+library(Hmisc)
+restData$zipGroups = cut2(restData$zipCode,g=4)
+```
+`g=` number of quantile groups
+### Create factor variables
+```{r}
+restData$zcf <- factor(restData$zipCode)
+```
+#### Levels of factor variables
+```{r}
+yesnofac = factor(yesno,levels=c("yes","no"))
+relevel(yesnofac,ref="no")
+```
+if no `levels=c("yes","no")`, by default, `factor()` treats the lowest value alphabetically as the first factor variable.
+```{r}
+schoolPub$High.Grade.=factor(schoolPub$High.Grade.,
+                             levels = levelCat,
+                             labels = levelCat,
+                             ordered = T)
+```
+### Common transforms
+- `abs(x)` absolute value
+- `sqrt(x)` square root
+- `ceiling(x)` ceiling(3.475) is 4
+- `floor(x)` floor(3.475) is 3
+- `round(x,digits=n)` round(3.475,digits=2) is 3.48
+- `signif(x,digits=n)` signif(3.475,digits=2) is 3.5
+- `cos(x)`, `sin(x)` etc.
+- `log(x)` natural logarithm
+- `log2(x)`, `log10(x)` other common logs
+- `exp(x)` exponentiating x
+- [http://statmethods.net/management/functions.html](http://statmethods.net/management/functions.html)
+### Further resources
+- A [tutorial](http://plyr.had.co.nz/09-user/) from the developer of plyr
+- Andrew Jaffe's [R notes](http://www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf)
+- A nice [lecture on categorical and factor variables](https://www.stat.berkeley.edu/classes/s133/factors.html)
+## Summarize the data
+### Look at a bit of the data
+```{r}
+head(restData,n=3)
+tail(restData,n=3)
+```
+### summary()
+```{r}
+summary(restData)
+```
+### More in depth information
+```{r}
+str(restData)
+```
+### Distribution
+#### Quantiles of quantitative variables
+```{r}
+quantile(restData$councilDistrict,na.rm=TRUE)
+quantile(restData$councilDistrict,probs=c(0.5,0.75,0.9))
+```
+#### table()
+```{r}
+table(restData$zipCode,useNA="ifany")
+table(restData$councilDistrict,restData$zipCode)
+```
+`useNA="ifany"` if there are any missing values, they'll be an added column to this table, which will be NA, and it'll tell you the number of missing values there is.
+### Check for missing values
+```{r}
+sum(is.na(restData$councilDistrict))
+any(is.na(restData$councilDistrict))
+all(restData$zipCode > 0)
+```
+#### Row and column sums
+```{r}
+colSums(is.na(restData))
+all(colSums(is.na(restData))==0)
+```
+### Values with specific characteristics
+```{r}
+table(restData$zipCode %in% c("21212","21213"))
+```
+### Cross tabs
+```{r}
+xt <- xtabs(Freq ~ Gender + Admit,data=DF)
+```
+`Freq` the variable that you want to be displayed in the table
+`Gender + Admit` break that down by variables
+```{r}
+xt = xtabs(breaks ~.,data=warpbreaks)
+```
+`~.` break down by all the variables in the data set
+### Flat tables
+```{r}
+ftable(xt)
+```
+`ftable` make flat tables from the crosstabs. It will summarize the data in a much smaller, more compact form. So it's easier to see.
+### Size of a data set
+```{r}
+object.size(fakeData)
+print(object.size(fakeData),units="Mb")
+```
+## Reshape the data
+### gather(), spread() from {tidyr} or {tidyverse}
+#### Convert columns into rows (with `gather()`)
+```{r}
+donor %>% gather(column_name, year, c(receipt_year, election_year))
+```
+`key=column_name` (new) name of column that store (old) column names
+`value=year` (new) name of column that store (old) values in (old) columns
+`c(receipt_year, election_year)` A selection of columns. If empty, all variables are selected. You can supply bare variable names, select all variables between x and z with `x:z`, exclude y with `-y`.
+#### Convert rows into columns (with `spread()`)
+```{r}
+donor %>% spread(receipt_year, amount)
+```
+`key=receipt_year` (old) name or position of column that contains the names of the (new) columns
+`value=amount` (old) name of column that contains the values of the (new) columns
+### {reshape2}
+```{r}
+library(reshape2)
+```
+#### melt() data frames
+```{r}
+mtcars$carname <- rownames(mtcars)
+carMelt <- melt(mtcars,id=c("carname","gear","cyl"),measure.vars=c("mpg","hp"))
+```
+`id=` creates an id value for car name, for gear and for cylinders. And then melt all the rest of the values. 
+#### Cast (dcast()) data frames
+```{r}
+cylData <- dcast(carMelt, cyl ~ variable)
+cylData <- dcast(carMelt, cyl ~ variable,mean)
+```
+Default aggregation function is length()
+### Aggregate values/ Create a new variable
+#### group_by(), summarise() from {dplyr} or {tidyverse}
+##### Example 1
+In `donor`, which `type` received the more money in donations from `party` 'REPUBLICAN'?
+```{r}
+donor %>% group_by(type, party) %>% summarise(dollars = sum(amount, na.rm = TRUE))
+```
+- `group_by()` lists the variables by which to aggregate data
+- `summarise()` creates a variable (dollars) and define the variable with an aggregation function
+- Use `%>%` to 'link' `group_by()` and `summarise()`
+- Aggregation functions: `n(), n_distinct(), sum(), mean(), max(), min()`, etc.
+##### Example 2
+In `donor`, what is the largest average donation `amount` for `contributor_state`?
+```{r}
+donor %>% 
+  group_by(contributor_state) %>% 
+  summarise(avg_donation = mean(amount, na.rm = TRUE)) %>%
+  arrange(desc(avg_donation))
+```
+##### Example 3
+```{r}
+police %>% 
+  transmute(
+    initial_type_group = initial_type_group %>% as.character()
+    , district_sector = district_sector %>% as.character()
+    , event_clearance_group = event_clearance_group %>% as.character()
+  ) %>%
+  mutate(
+    initial_type_group = ifelse(initial_type_group %in% NA, 'Unknown', initial_type_group)
+  ) %>%
+  filter(event_clearance_group %in% 'DISTURBANCES') %>% 
+  group_by(initial_type_group, district_sector) %>% 
+  summarise(n  = n()) %>%
+  write_csv('tidyverse_exercise_output.csv')
+```
+##### Example 4
+```{r}
+police %>% 
+  transmute(
+    initial_type_group = initial_type_group %>% as.character()
+    , district_sector = district_sector %>% as.character()
+    , event_clearance_group = event_clearance_group %>% as.character()
+  ) %>%
+  mutate(
+    initial_type_group = ifelse(initial_type_group %in% NA, 'Unknown', initial_type_group)
+  ) %>%
+  filter(event_clearance_group %in% 'DISTURBANCES') %>% 
+  group_by(initial_type_group, district_sector) %>% 
+  summarise(n  = n()) %>%
+  filter(
+    (initial_type_group %in% 'Unknown' & district_sector %in% 'W') |
+    (initial_type_group %in% 'ROAD RAGE' & district_sector %in% 'L')
+  )
+```
+#### tapply()
+```{r}
+tapply(InsectSprays$count,InsectSprays$spray,sum)
+```
+sum up the counts, break down by spray
+#### Another way - split()+apply()+unlist()
+```{r}
+spIns =  split(InsectSprays$count,InsectSprays$spray)
+```
+`split()` returns a list
+```{r}
+sprCount = lapply(spIns,sum)
+unlist(sprCount)
+```
+#### Another way - split()+sapply()
+```{r}
+sapply(spIns,sum)
+```
+#### ddply() from {plyr}
+```{r}
+library(plyr)
+ddply(InsectSprays,.(spray),summarize,sum=sum(count))
+```
+`.()` are the variables to summarize
+```{r}
+spraySums <- ddply(InsectSprays,.(spray),summarize,sum=ave(count,FUN=sum))
+```
+### Further resources
+- A [tutorial](http://plyr.had.co.nz/09-user/) from the developer of plyr
+- [A nice reshape tutorial](https://www.slideshare.net/jeffreybreen/reshaping-data-in-r)
+- [A good plyr primer](https://www.r-bloggers.com/a-quick-primer-on-split-apply-combine-problems/)
+## Merge the data
+### joins from {dplyr} or {tidyverse}
+#### Mutating Joins
+Join matching rows from b to a.
+```{r}
+left_join(a, b, by = "x1")
+```
+Join matching rows from a to b. 
+```{r}
+right_join(a, b, by = "x1") 
+```
+Join data. Retain only rows in both sets. 
+```{r}
+inner_join(a, b, by = "x1") 
+```
+Join data. Retain all values, all rows.
+```{r}
+full_join(a, b, by = "x1") 
+```
+#### Filtering Joins
+All rows in a that have a match in b. 
+```{r}
+semi_join(a, b, by = "x1") 
+```
+All rows in a that do not have a match in b
+```{r}
+anti_join(a, b, by = "x1") 
+```
+#### Set Operations
+Rows that appear in both y and z. 
+```{r}
+intersect(y, z) 
+```
+Rows that appear in either or both y and z.
+```{r}
+union(y, z)
+```
+Rows that appear in y but not z.
+```{r}
+setdiff(y, z)
+```
+### merge()
+```{r}
+mergedData = merge(reviews,solutions,by.x="solution_id",by.y="id",all=TRUE)
+```
+`all=TRUE` full join
+### Further resourece
+- [The quick R data merging page](https://www.statmethods.net/management/merging.html)
+## Further resources
+- [Data Wrangling with {dplyr} and {tidyr} Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+- Andrew Jaffe's [lecture notes](http://www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf)
