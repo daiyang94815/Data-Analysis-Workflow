@@ -565,67 +565,6 @@ schoolPub$High.Grade.=factor(schoolPub$High.Grade.,
 - A [tutorial](http://plyr.had.co.nz/09-user/) from the developer of plyr
 - Andrew Jaffe's [R notes](http://www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf)
 - A nice [lecture on categorical and factor variables](https://www.stat.berkeley.edu/classes/s133/factors.html)
-## Summarize the data
-### Look at a bit of the data
-```{r}
-head(restData,n=3)
-tail(restData,n=3)
-```
-### summary()
-```{r}
-summary(restData)
-```
-### More in depth information
-```{r}
-str(restData)
-```
-### Distribution
-#### Quantiles of quantitative variables
-```{r}
-quantile(restData$councilDistrict,na.rm=TRUE)
-quantile(restData$councilDistrict,probs=c(0.5,0.75,0.9))
-```
-#### table()
-```{r}
-table(restData$zipCode,useNA="ifany")
-table(restData$councilDistrict,restData$zipCode)
-```
-`useNA="ifany"` if there are any missing values, they'll be an added column to this table, which will be NA, and it'll tell you the number of missing values there is.
-### Check for missing values
-```{r}
-sum(is.na(restData$councilDistrict))
-any(is.na(restData$councilDistrict))
-all(restData$zipCode > 0)
-```
-#### Row and column sums
-```{r}
-colSums(is.na(restData))
-all(colSums(is.na(restData))==0)
-```
-### Values with specific characteristics
-```{r}
-table(restData$zipCode %in% c("21212","21213"))
-```
-### Cross tabs
-```{r}
-xt <- xtabs(Freq ~ Gender + Admit,data=DF)
-```
-`Freq` the variable that you want to be displayed in the table
-`Gender + Admit` break that down by variables
-```{r}
-xt = xtabs(breaks ~.,data=warpbreaks)
-```
-`~.` break down by all the variables in the data set
-### Flat tables
-```{r}
-ftable(xt)
-```
-`ftable` make flat tables from the crosstabs. It will summarize the data in a much smaller, more compact form. So it's easier to see.
-### Size of a data set
-```{r}
-object.size(fakeData)
-print(object.size(fakeData),units="Mb")
-```
 ## Reshape the data
 ### gather(), spread() from {tidyr} or {tidyverse}
 #### Convert columns into rows (with `gather()`)
@@ -790,6 +729,67 @@ mergedData = merge(reviews,solutions,by.x="solution_id",by.y="id",all=TRUE)
 `all=TRUE` full join
 ### Further resourece
 - [The quick R data merging page](https://www.statmethods.net/management/merging.html)
+## Summarize the data
+### Look at a bit of the data
+```{r}
+head(restData,n=3)
+tail(restData,n=3)
+```
+### summary()
+```{r}
+summary(restData)
+```
+### More in depth information
+```{r}
+str(restData)
+```
+### Distribution
+#### Quantiles of quantitative variables
+```{r}
+quantile(restData$councilDistrict,na.rm=TRUE)
+quantile(restData$councilDistrict,probs=c(0.5,0.75,0.9))
+```
+#### table()
+```{r}
+table(restData$zipCode,useNA="ifany")
+table(restData$councilDistrict,restData$zipCode)
+```
+`useNA="ifany"` if there are any missing values, they'll be an added column to this table, which will be NA, and it'll tell you the number of missing values there is.
+### Check for missing values
+```{r}
+sum(is.na(restData$councilDistrict))
+any(is.na(restData$councilDistrict))
+all(restData$zipCode > 0)
+```
+#### Row and column sums
+```{r}
+colSums(is.na(restData))
+all(colSums(is.na(restData))==0)
+```
+### Values with specific characteristics
+```{r}
+table(restData$zipCode %in% c("21212","21213"))
+```
+### Cross tabs
+```{r}
+xt <- xtabs(Freq ~ Gender + Admit,data=DF)
+```
+`Freq` the variable that you want to be displayed in the table
+`Gender + Admit` break that down by variables
+```{r}
+xt = xtabs(breaks ~.,data=warpbreaks)
+```
+`~.` break down by all the variables in the data set
+### Flat tables
+```{r}
+ftable(xt)
+```
+`ftable` make flat tables from the crosstabs. It will summarize the data in a much smaller, more compact form. So it's easier to see.
+### Size of a data set
+```{r}
+object.size(fakeData)
+print(object.size(fakeData),units="Mb")
+```
 ## Further resources
 - [Data Wrangling with {dplyr} and {tidyr} Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
 - Andrew Jaffe's [lecture notes](http://www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf)
