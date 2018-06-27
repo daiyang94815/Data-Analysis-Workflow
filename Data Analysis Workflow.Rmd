@@ -454,7 +454,6 @@ X[(X$var1 <= 3 & X$var3 > 11),]
 X[(X$var1 <= 3 | X$var3 > 15),]
 restData[restData$zipCode %in% c("21212","21213"),]
 ```
-
 ### Deal with missing values
 ```{r}
 X[which(X$var2 > 8),]
@@ -578,7 +577,7 @@ donor %>% gather(column_name, year, c(receipt_year, election_year))
 ```{r}
 donor %>% spread(receipt_year, amount)
 ```
-`key=receipt_year` (old) name or position of column that contains the names of the (new) columns
+`key=receipt_year` (old) name or position of column that contains the names of the (new) columns  
 `value=amount` (old) name of column that contains the values of the (new) columns
 ### {reshape2}
 ```{r}
@@ -774,7 +773,7 @@ table(restData$zipCode %in% c("21212","21213"))
 ```{r}
 xt <- xtabs(Freq ~ Gender + Admit,data=DF)
 ```
-`Freq` the variable that you want to be displayed in the table
+`Freq` the variable that you want to be displayed in the table  
 `Gender + Admit` break that down by variables
 ```{r}
 xt = xtabs(breaks ~.,data=warpbreaks)
