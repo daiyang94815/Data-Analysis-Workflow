@@ -571,8 +571,8 @@ schoolPub$High.Grade.=factor(schoolPub$High.Grade.,
 ```{r}
 donor %>% gather(column_name, year, c(receipt_year, election_year))
 ```
-`key=column_name` (new) name of column that store (old) column names
-`value=year` (new) name of column that store (old) values in (old) columns
+`key=column_name` (new) name of column that store (old) column names  
+`value=year` (new) name of column that store (old) values in (old) columns  
 `c(receipt_year, election_year)` A selection of columns. If empty, all variables are selected. You can supply bare variable names, select all variables between x and z with `x:z`, exclude y with `-y`.
 #### Convert rows into columns (with `spread()`)
 ```{r}
