@@ -606,6 +606,7 @@ donor %>% group_by(type, party) %>% summarise(dollars = sum(amount, na.rm = TRUE
 - `summarise()` creates a variable (dollars) and define the variable with an aggregation function
 - Use `%>%` to 'link' `group_by()` and `summarise()`
 - Aggregation functions: `n(), n_distinct(), sum(), mean(), max(), min()`, etc.
+- `options(pillar.sigfig = 10)` to see more digits for numeric results in tibble
 ##### Example 2
 In `donor`, what is the largest average donation `amount` for `contributor_state`?
 ```{r}
