@@ -790,6 +790,223 @@ ftable(xt)
 object.size(fakeData)
 print(object.size(fakeData),units="Mb")
 ```
+## Edit text variables
+### transformation of upper/lower case
+```{r}
+tolower(names(cameraData))
+toupper()
+```
+### split
+#### strsplit()+sapply()
+```{r}
+splitNames = strsplit(names(cameraData),"\\.")
+```
+`split="\\."` character vector containing regular expression(s) to use for splitting.
+- strsplit() returns a list
+- use escape character '\' because the period is a reserved character
+Then extract the first element of splited names:
+```{r}
+splitNames[[6]][1]
+firstElement <- function(x){x[1]}
+sapply(splitNames,firstElement)
+```
+### substitute
+#### sub() and gsub()
+```{r}
+testName <- "this_is_a_test"
+
+# sub only the first one
+sub("_","",testName)
+
+# sub all
+gsub("_","",testName)
+```
+### search and find values
+#### grep() and grepl()
+```{r}
+grep("Alameda",cameraData$intersection)
+table(grepl("Alameda",cameraData$intersection))
+grep("Alameda",cameraData$intersection,value=TRUE)
+
+# subset
+cameraData2 <- cameraData[!grepl("Alameda",cameraData$intersection),]
+```
+`pattern="Alameda"` character string containing a regular expression (or character string for fixed = TRUE) to be matched
+- `grep(value = FALSE)` returns a vector of the indices of the elements of x that yielded a match (or not, for `invert = TRUE`)
+- `grep(value = TRUE)` returns a character vector containing the selected elements of x
+- `grepl` returns a logical vector (match or not for each element of x)
+### more string functions
+#### {stringr}
+```{r}
+# number of characters
+nchar("Jeffrey Leek")
+# extract parts of the string
+substr("Jeffrey Leek",1,7) # 1st to 7th characters
+# paste to get a string spereated with a space
+paste("Jeffrey","Leek")
+# paste to get a string without space
+paste0("Jeffrey","Leek")
+# removes whitespace from start and end of string
+str_trim("Jeff      ")
+```
+## Regular expression
+### metacharacter
+`^` represents the start of a line
+```{r}
+^i think
+```
+`$` represents the end of a line
+```{r}
+morning$
+```
+`.` is used to refer to any character
+```{r}
+9.11
+```
+`|` "or"
+```{r}
+flood|fire
+flood|earthquake|hurricane|coldfire
+```
+`?` indicates that the indicated expression is optional
+```{r}
+[Gg]eorge( [Ww]\.)? [Bb]ush
+```
+we wanted to match a "." as a literal period; to do that, we had to "escape" the metacharacter, preceding it with a backslash In general, we have to do this for any metacharacter we want to include in our match  
+`*` and `+` indicate repetition; `*` means "any number, including none, of the item" and `+` means "at least one of the item"
+```{r}
+(.*)
+[0-9]+ (.*)[0-9]+
+```
+`{}` are referred to as interval quantifiers which specify the minimum and maximum number of matches of an expression
+```{r}
+[Bb]ush( +[^ ]+ +){1,5} debate
+```
+- `m,n` m<=matches<=n
+- `m` matches==m
+- `m,` matches>=m
+`()` not only limits the scope of alternatives divided by a `|`, but also can be used to "remember" text matched by the subexpression enclosed; We refer to the matched text with `\1`, `\2`, etc.
+```{r}
++([a-zA-Z]+) +\1 +
+```
+The greediness of `*` (longest possible match) can be turned off with the `?`
+```{r}
+^s(.*?)s$
+```
+### Character Classes with []
+list a set of characters we will accept at a given point in the match
+```{r}
+[Bb][Uu][Ss][Hh]
+
+^[Ii] am
+
+^[0-9][a-zA-Z]
+
+^[Gg]ood|[Bb]ad
+^([Gg]ood|[Bb]ad)
+```
+When used at the beginning of a character class, the "^" is also a metacharacter and indicates matching characters NOT in the indicated class
+```{r}
+[^?.]$
+```
+## Work with date
+### format date
+- `%d` day as number (0-31)
+- `%a` abbreviated weekday
+- `%A` unabbreviated weekday
+- `%m` month (00-12)
+- `%b` abbreviated month
+- `%B` unabbrevidated month
+- `%y` 2 digit year
+- `%Y` four digit year
+```{r}
+format(Sys.Date(),"%a %b %d")
+```
+### create date
+```{r}
+x = c("1jan1960", "2jan1960", "31mar1960", "30jul1960")
+z = as.Date(x, "%d%b%Y")
+z[1] - z[2]
+as.numeric(z[1]-z[2])
+```
+### attribute of date
+```{r}
+weekdays(d2)
+months(d2)
+
+# days from origin
+julian(d2) 
+```
+### {lubridate}
+```{r}
+library(lubridate)
+ymd("20140108")
+mdy("08/04/2013")
+dmy("03-04-2013")
+
+ymd_hms("2011-08-03 10:15:03")
+ymd_hms("2011-08-03 10:15:03",tz="Pacific/Auckland")
+?Sys.timezone
+
+x = dmy(c("1jan2013", "2jan2013", "31mar2013", "30jul2013"))
+# weekday
+wday(x[1])
+# show weekday abbreviation
+wday(x[1],label=TRUE)
+```
+#### Further resources
+- More information in this nice [lubridate tutorial](http://www.r-statistics.com/2012/03/do-more-with-dates-and-times-in-r-with-lubridate-1-1-0/)
+- The [lubridate vignette](http://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html) is the same content
+- Ultimately you want your dates and times as class "Date" or the classes "POSIXct", "POSIXlt". For more information type `?POSIXlt`
+## Data resources
+### Open Government Sites
+* United Nations [http://data.un.org/](http://data.un.org/)
+* U.S. [http://www.data.gov/](http://www.data.gov/)
+  * [List of cities/states with open data](http://simplystatistics.org/2012/01/02/list-of-cities-states-with-open-data-help-me-find/)
+* United Kingdom [http://data.gov.uk/](http://data.gov.uk/)
+* France [http://www.data.gouv.fr/](http://www.data.gouv.fr/)
+* Ghana [http://data.gov.gh/](http://data.gov.gh/)
+* Australia [http://data.gov.au/](http://data.gov.au/)
+* Germany [https://www.govdata.de/](https://www.govdata.de/) 
+* Hong Kong [http://www.gov.hk/en/theme/psi/datasets/](http://www.gov.hk/en/theme/psi/datasets/)
+* Japan [http://www.data.go.jp/](http://www.data.go.jp/)
+* Many more [http://www.data.gov/opendatasites](http://www.data.gov/opendatasites)
+
+### Gapminder
+Gapminder has a lot of data about development in particular in human heath.
+[http://www.gapminder.org/](http://www.gapminder.org/)
+### Survey data from the United States
+[http://www.asdfree.com/](http://www.asdfree.com/)
+### Infochimps Marketplace
+The Infochimps Marketplace has a bunch of different data sets which you can sort by various different tags.
+[http://www.infochimps.com/marketplace](http://www.infochimps.com/marketplace)
+### Kaggle
+Kaggle is a company that offers data science competitions, and they often have very interesting data sets that they make available as part of those competitions. So they're good for practice, but they're also good for potentially discovering new, interesting things that can help companies solve real problems.
+[http://www.kaggle.com/](http://www.kaggle.com/)
+### Collections by data scientists
+* Hilary Mason http://bitly.com/bundles/hmason/1
+* Peter Skomoroch https://delicious.com/pskomoroch/dataset
+* Jeff Hammerbacher http://www.quora.com/Jeff-Hammerbacher/Introduction-to-Data-Science-Data-Sets
+* Gregory Piatetsky-Shapiro http://www.kdnuggets.com/gps.html
+* [http://blog.mortardata.com/post/67652898761/6-dataset-lists-curated-by-data-scientists](http://blog.mortardata.com/post/67652898761/6-dataset-lists-curated-by-data-scientists)
+
+### More specialized collections
+* [Stanford Large Network Data](http://snap.stanford.edu/data/) focuses on network data, machine learning
+* [UCI Machine Learning](http://archive.ics.uci.edu/ml/) has a variety of data sets that can be used to practice your classification or predictions
+* [KDD Nugets Datasets](http://www.kdnuggets.com/datasets/index.html)
+* [CMU Statlib](http://lib.stat.cmu.edu/datasets/) one of the most famous canonical sets of data sets
+* [Gene expression omnibus](http://www.ncbi.nlm.nih.gov/geo/) focuses on data sets that come from human genomic experiments or other organismal genomics experiments
+* [ArXiv Data](http://arxiv.org/help/bulk_data)
+* [Public Data Sets on Amazon Web Services](http://aws.amazon.com/publicdatasets/)
+
+### Some API's with R interfaces
+* [twitter](https://dev.twitter.com/) and [twitteR](http://cran.r-project.org/web/packages/twitteR/index.html) package
+* [figshare](http://api.figshare.com/docs/intro.html) and [rfigshare](http://cran.r-project.org/web/packages/rfigshare/index.html)
+* [PLoS](http://api.plos.org/) and [rplos](http://cran.r-project.org/web/packages/rplos/rplos.pdf)
+* [rOpenSci](http://ropensci.org/packages/index.html)
+* [Facebook](https://developers.facebook.com/) and [RFacebook](http://cran.r-project.org/web/packages/Rfacebook/)
+* [Google maps](https://developers.google.com/maps/) and [RGoogleMaps](http://cran.r-project.org/web/packages/RgoogleMaps/index.html)
+
 ## Further resources
 - [Data Wrangling with {dplyr} and {tidyr} Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
 - Andrew Jaffe's [lecture notes](http://www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf)
