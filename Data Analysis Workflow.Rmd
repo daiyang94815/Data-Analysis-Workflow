@@ -880,7 +880,7 @@ we wanted to match a "." as a literal period; to do that, we had to "escape" the
 ```
 `{}` are referred to as interval quantifiers which specify the minimum and maximum number of matches of an expression
 ```{r}
-[Bb]ush( +[^ ]+ +){1,5} debate
+[Bb]ush ([^ ]+ +){1,5}debate
 ```
 - `m,n` m<=matches<=n
 - `m` matches==m
