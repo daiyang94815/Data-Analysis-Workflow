@@ -131,6 +131,7 @@ Important parameters
 - `quote` - whether there are any quoted values, quote="" means no quotes
 - `na.strings` - set the character that represents a missing value
 - `skip` - number of lines to skip before starting to read
+- `colClasses`
 ### read.csv
 ```{r}
 cameraData <- read.csv("./data/cameras.csv")
@@ -1010,3 +1011,65 @@ Kaggle is a company that offers data science competitions, and they often have v
 ## Further resources
 - [Data Wrangling with {dplyr} and {tidyr} Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
 - Andrew Jaffe's [lecture notes](http://www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf)
+# Step 3 Exploratory data analysis (EDA)
+## {base}
+### Simple summaries of data
+#### One dimension
+##### Five Number Summary
+```{r}
+summary(pollution$pm25)
+```
+##### Boxplot
+```{r}
+boxplot(pollution$pm25, col = "blue")
+```
+##### Histogram
+```{r}
+hist(pollution$pm25, col = "green", breaks = 100)
+rug(pollution$pm25)
+```
+`rug()` plots all of the points in your dataset along underneath the histogram  
+`breaks=100` the number of bars in the histogram
+##### Overlaying Features
+```{r}
+abline(h = 12)
+abline(v = median(pollution$pm25), col = "magenta", lwd = 4)
+```
+`h=` horizontal line  
+`v=` vertical line  
+`lwd=`line width
+##### Barplot
+```{r}
+barplot(table(pollution$region), col = "wheat", main = "Number of Counties in Each Region")
+```
+#### Two dimensions
+##### Multiple Boxplots
+```{r}
+boxplot(pm25 ~ region, data = pollution, col = "red")
+```
+`pm25 ~ region` `pm25` is a numeric vector of data values to be split into groups according to the grouping variable `region` (usually a factor)
+##### Multiple Histograms
+```{r}
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
+hist(subset(pollution, region == "east")$pm25, col = "green")
+hist(subset(pollution, region == "west")$pm25, col = "green")
+```
+`par()` set or query graphical parameters  
+`mar=` A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot.  
+`mfrow=` A vector of the form c(nr, nc). Subsequent figures will be drawn in an nr-by-nc array on the device by columns (mfcol), or rows (mfrow), respectively.
+##### Scatterplot
+```{r}
+with(pollution, plot(latitude, pm25, col = region))
+abline(h = 12, lwd = 2, lty = 2)
+```
+`col=region` break out color groups by region  
+`lty` line type
+##### Multiple Scatterplots
+```{r}
+par(mfrow = c(1, 2), mar = c(5, 4, 2, 1))
+with(subset(pollution, region == "west"), plot(latitude, pm25, main = "West"))
+with(subset(pollution, region == "east"), plot(latitude, pm25, main = "East"))
+```
+## Further resources
+- [R Graph Gallery](https://www.r-graph-gallery.com/)
+- [R Bloggers](https://www.r-bloggers.com/)
