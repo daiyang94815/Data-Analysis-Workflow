@@ -21,7 +21,12 @@ if(!file.exists("data")){
   dir.create("data")
 }
 ```
-# Packages
+# Packages and Tips
+## {base}
+rewrite the names of the columns to remove any spaces
+```{r}
+names(ozone) <- make.names(names(ozone))
+```
 ## {data.table}
 Much, much faster at subsetting, group, and updating
 ### Create data tables just like data frames
@@ -118,7 +123,7 @@ dateDownloaded <- date()
 dateDownloaded
 ```
 ## From local flat files
-### read.table
+### read.table()
 ```{r}
 cameraData <- read.table("./data/cameras.csv",sep=",",header=TRUE)
 ```
@@ -132,13 +137,19 @@ Important parameters
 - `na.strings` - set the character that represents a missing value
 - `skip` - number of lines to skip before starting to read
 - `colClasses`
-### read.csv
+### read.csv()
 ```{r}
 cameraData <- read.csv("./data/cameras.csv")
 ```
 `read.csv` sets `sep=","` and `header=TRUE`
+### read_csv() from {readr}
+```{r}
+library(readr)
+ozone <- read_csv("data/hourly_44201_2014.csv", col_types = "ccccinnccccccncnncccccc")
+```
+`col_types=` c = character, i = integer, n = number, d = double, l = logical, D = date, T = date time, t = time, ? = guess, or _/- to skip the column
 ## From Excel files
-### read_excel {readxl}
+### read_excel() from {readxl}
 ```{r}
 download.file(fileUrl,destfile="./data/cameras.xlsx",mode="wb")
 library(readxl)
