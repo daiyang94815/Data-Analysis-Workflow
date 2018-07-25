@@ -124,7 +124,7 @@ dateDownloaded
 ```
 ## 1.2 From local flat files
 ### 1.2.1 {base}
-#### 1.2.1.1 read.table()
+**read.table()**
 ```{r}
 cameraData <- read.table("./data/cameras.csv",sep=",",header=TRUE)
 ```
@@ -138,7 +138,7 @@ Important parameters
 - `na.strings` - set the character that represents a missing value
 - `skip` - number of lines to skip before starting to read
 - `colClasses`
-#### 1.2.1.2 read.csv()
+**read.csv()**
 ```{r}
 cameraData <- read.csv("./data/cameras.csv")
 ```
@@ -208,13 +208,13 @@ teams <- xpathSApply(doc,"//li[@class='team-name']",xmlValue)
 **Notes and further resources**
 - Official XML tutorials [short](http://www.omegahat.org/RSXML/shortIntro.pdf), [long](http://www.omegahat.org/RSXML/shortIntro.pdf)
 - [An outstanding guide to the XML package](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)
-## From JSON
-### {jsonlite}
+## 1.4 From JSON
+### 1.4.1 {jsonlite}
 ```{r}
 library(jsonlite)
 jsonData <- fromJSON("https://api.github.com/users/jtleek/repos")
 ```
-#### Inspect the data (nested objects)
+1. Inspect the data (nested objects)
 ```{r}
 names(jsonData)
 jsonData$name
@@ -222,27 +222,27 @@ jsonData$name
 names(jsonData$owner)
 jsonData$owner$login
 ```
-#### Writing data frames to JSON
+2. Writing data frames to JSON
 ```{r}
 myjson <- toJSON(iris, pretty=TRUE)
 # print the data
 cat(myjson)
 ```
 `pretty=TRUE` give nice indentations so it's easy to read
-#### Further resources
+**Further resources**
 - [http://www.json.org/](http://www.json.org/)
 - [A good tutorial on jsonlite](https://www.r-bloggers.com/new-package-jsonlite-a-smarter-json-encoderdecoder/)
 - [jsonlite vignette](https://cran.r-project.org/web/packages/jsonlite/vignettes/json-mapping.pdf)
-## From MySQL
-### {RMySQL}
-#### Connect and list databases
+## 1.5 From MySQL
+### 1.5.1 {RMySQL}
+1. Connect and list databases
 ```{r}
 library(RMySQL)
 ucscDb <- dbConnect(MySQL(),user="genome", 
                     host="genome-mysql.cse.ucsc.edu")
 result <- dbGetQuery(ucscDb,"show databases;"); dbDisconnect(ucscDb)
 ```
-#### Connect to specific database and list tables
+2. Connect to specific database and list tables
 ```{r}
 hg19 <- dbConnect(MySQL(),user="genome", db="hg19",
                     host="genome-mysql.cse.ucsc.edu")
@@ -250,52 +250,52 @@ allTables <- dbListTables(hg19)
 length(allTables)
 allTables[1:5]
 ```
-#### Get dimensions of a specific table
+3. Get dimensions of a specific table
 ```{r}
 # get column names
 dbListFields(hg19,"affyU133Plus2")
 # get number of rows
 dbGetQuery(hg19, "select count(*) from affyU133Plus2")
 ```
-#### Read from the table
+4. Read from the table
 ```{r}
 affyData <- dbReadTable(hg19, "affyU133Plus2")
 head(affyData)
 ```
-##### Select a specific subset
+4.1 Select a specific subset
 ```{r}
 query <- dbSendQuery(hg19, "select * from affyU133Plus2 where misMatches between 1 and 3")
 affyMis <- fetch(query)
 affyMisSmall <- fetch(query,n=10); dbClearResult(query)
 dim(affyMisSmall)
 ```
-#### Close the connection
+5. Close the connection
 ```{r}
 dbDisconnect(hg19)
 ```
-#### Further resources
+**Further resources**
 - [RMySQL vignette](https://cran.r-project.org/web/packages/RMySQL/RMySQL.pdf)
 - [List of MySQL commands](http://www.pantz.org/software/mysql/mysqlcommands.html)
 - A nice blog post summarizing [some other commands](https://www.r-bloggers.com/mysql-and-r/)
-## From HDF5
-### {rhdf5}
+## 1.6 From HDF5
+### 1.6.1 {rhdf5}
 ```{r}
 source("http://bioconductor.org/biocLite.R")
 biocLite("rhdf5")
 library(rhdf5)
 ```
-#### Create HDF5 file
+1. Create HDF5 file
 ```{r}
 created = h5createFile("example.h5")
 ```
-##### Create groups
+1.1 Create groups
 ```{r}
 created = h5createGroup("example.h5","foo")
 created = h5createGroup("example.h5","baa")
 created = h5createGroup("example.h5","foo/foobaa")
 h5ls("example.h5")
 ```
-##### Write to groups
+1.2 Write to groups
 ```{r}
 A = matrix(1:10,nr=5,nc=2)
 h5write(A, "example.h5","foo/A")
@@ -304,31 +304,32 @@ attr(B, "scale") <- "liter"
 h5write(B, "example.h5","foo/foobaa/B")
 h5ls("example.h5")
 ```
-##### Write a data set
+1.3 Write a data set
 ```{r}
 df = data.frame(1L:5L,seq(0,1,length.out=5),
   c("ab","cde","fghi","a","s"), stringsAsFactors=FALSE)
 h5write(df, "example.h5","df")
 h5ls("example.h5")
 ```
-#### Read data
+2. Read data
 ```{r}
 readA = h5read("example.h5","foo/A")
 readB = h5read("example.h5","foo/foobaa/B")
 readdf= h5read("example.h5","df")
 readA
 ```
-#### Write and read chunks(subsets)
+3. Write and read chunks(subsets)
 ```{r}
 h5write(c(12,13,14),"example.h5","foo/A",index=list(1:3,1))
 h5read("example.h5","foo/A")
 ```
 `index=list(1:3,1)` give you indices for the dimensions to read/write
-#### Further resources
+**Further resources**
 - [The rhdf5 tutorial](http://www.bioconductor.org/packages/release/bioc/html/rhdf5.html)
 - The HDF group has [informaton on HDF5 in general](https://portal.hdfgroup.org/display/HDF5/HDF5)
-## From Web
-### readLines()
+## 1.7 From Web
+### 1.7.1 {base}
+#### 1.7.1.1 readLines()
 ```{r}
 # open a connection
 con = url("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
@@ -336,7 +337,7 @@ htmlCode = readLines(con)
 # close the connection
 close(con)
 ```
-### {XML}
+### 1.7.2 {XML}
 ```{r}
 library(XML)
 url <- "http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en"
@@ -346,7 +347,8 @@ xpathSApply(html, "//title", xmlValue)
 xpathSApply(html, "//td[@id='col-citedby']", xmlValue)
 ```
 `useInternalNodes=T` gets the complete structure out
-### GET() from {httr}
+### 1.7.3 {httr}
+#### 1.7.3.1 GET()
 ```{r}
 library(httr)
 # GET the URL
@@ -357,23 +359,23 @@ content2 = content(html2,as="text")
 parsedHtml = htmlParse(content2,asText=TRUE)
 xpathSApply(parsedHtml, "//title", xmlValue)
 ```
-#### Access websites with passwords
+1. Access websites with passwords
 ```{r}
 pg2 = GET("http://httpbin.org/basic-auth/user/passwd",
     authenticate("user","passwd"))
 ```
-##### Use handles (to store authentication)
+1.1 Use handles (to store authentication)
 ```{r}
 google = handle("http://google.com")
 pg1 = GET(handle=google,path="/")
 pg2 = GET(handle=google,path="search")
 ```
-#### Further resources
+**Further resources**
 - [R Bloggers](https://www.r-bloggers.com/) has a number of examples of web scraping
 - The [httr help file](https://cran.r-project.org/web/packages/httr/httr.pdf) has useful examples
-## From APIs
-### {httr}
-#### Access Website from R
+## 1.8 From APIs
+### 1.8.1 {httr}
+1. Access Website from R
 ```{r}
 # example 1: Twitter
 library(httr)
@@ -409,13 +411,13 @@ req <- with_config(gtoken, GET("https://api.github.com/users/jtleek/repos"))
 stop_for_status(req)
 content(req)
 ```
-#### Convert the json object
+2. Convert the json object
 ```{r}
 # example 1
 # return a structured R object, which is a little bit hard to read
 json1 = content(homeTL)
 ```
-### {jsonlite}
+### 1.8.2 {jsonlite}
 ```{r}
 # example 1
 # reformat it as a data frame where each row corresponds to a tweet in the user's timeline
@@ -427,20 +429,23 @@ json2 = jsonlite::fromJSON(toJSON(json1))
 library(jsonlite)
 repo <- fromJSON(toJSON(content(req)))
 ```
-## From image
+## 1.9 From image
 - [jpeg](https://cran.r-project.org/web/packages/jpeg/index.html)
 - [readbitmap](https://cran.r-project.org/web/packages/readbitmap/index.html)
 - [png](https://cran.r-project.org/web/packages/png/index.html)
 - [EBImage (Bioconductor)](http://www.bioconductor.org/packages/2.13/bioc/html/EBImage.html)
-## From GIS data
+## 1.10 From GIS data
 - [rgdal](https://cran.r-project.org/web/packages/rgdal/index.html)
 - [rgeos](https://cran.r-project.org/web/packages/rgeos/index.html)
 - [raster](https://cran.r-project.org/web/packages/raster/index.html)
-## From music data
+## 1.11 From music data
 - [tuneR](https://cran.r-project.org/web/packages/tuneR/)
 - [seewave](http://rug.mnhn.fr/seewave/)
-# Step 2 Clean the data
-## Subset
+# 2. Step 2 Clean the data
+## 2.1 Data transformation
+### 2.1.1 Subset
+#### 2.1.1.1 {base}
+1. Position or name
 ```{r}
 # subset by colunmns, x is a data frame
 X[,1]
@@ -452,56 +457,60 @@ X[,'var1']
 # subset by rows and colunmns
 X[1:2,'var2']
 ```
-### select(), filter() from {dplyr} or {tidyverse}
-```{r}
-donor %>% filter(amount > 100)
-donor %>% filter(! type %in% 'Candidate')
-```
-Operators for conditions: `!, %in%, >, >=, <, <=, ==, &, |`
-```{r}
-select(chicago, 1:5)
-select(chicago, city:dptp)
-select(chicago, -(city:dptp))
-```
-### Logicals (and, or, %in%)
+2. Logicals (and, or, %in%)
 ```{r}
 X[(X$var1 <= 3 & X$var3 > 11),]
 X[(X$var1 <= 3 | X$var3 > 15),]
 restData[restData$zipCode %in% c("21212","21213"),]
 ```
-### Deal with missing values
+3. Deal with missing values
 ```{r}
 X[which(X$var2 > 8),]
 ```
 `which()` returns the indices where conditions are met
-## Reorder
-### arrange() from {dplyr} or {tidyverse}
+#### 2.1.1.2 {dplyr} or {tidyverse}
+#### 2.1.1.2.1 filter() (rows)
+```{r}
+donor %>% filter(amount > 100)
+donor %>% filter(! type %in% 'Candidate')
+```
+Operators for conditions: `!, %in%, >, >=, <, <=, ==, &, |`
+#### 2.1.1.2.2 select() (columns)
+```{r}
+select(chicago, 1:5)
+select(chicago, city:dptp)
+select(chicago, -(city:dptp))
+```
+## 2.1.2 Reorder
+### 2.1.2.1 {dplyr} or {tidyverse}
+#### 2.1.2.1.1 arrange()
 ```{r}
 arrange(chicago, desc(date))
 ```
-### sort()
+### 2.1.2.2 {base}
+#### 2.1.2.2.1 sort()
 ```{r}
 sort(X$var1)
 sort(X$var1,decreasing=TRUE)
 sort(X$var2,na.last=TRUE)
 ```
-### order()
+#### 2.1.2.2.2 order()
 ```{r}
 X[order(X$var1),]
 X[order(X$var1,X$var3),]
 ```
 `order()` returns a permutation which rearranges its first argument into ascending or descending order, breaking ties by further arguments.
-### {plyr}
-```{r}
-library(plyr)
-arrange(X,var1)
-arrange(X,desc(var1))
-```
-## Add rows and columns
+## 2.1.3 Add rows and columns
+### 2.1.3.1 {base}
 ```{r}
 X$var4 <- rnorm(5)
 ```
-### Binding from {dplyr} or {tidyverse}
+* cbind() and rbind()
+```{r}
+Y <- cbind(X,rnorm(5))
+```
+### 2.1.3.2 {dplyr} or {tidyverse}
+#### 2.1.3.2.1 Binding
 Append z to y as new rows. 
 ```{r}
 bind_rows(y, z) 
@@ -511,32 +520,32 @@ Append z to y as new columns.
 bind_cols(y, z) 
 ```
 Caution: matches rows by position.
-### cbind() and rbind()
-```{r}
-Y <- cbind(X,rnorm(5))
-```
-## Rename() from {dplyr} or {tidyverse}
+## 2.1.4 Rename 
+### 2.1.4.1 {dplyr} or {tidyverse}
+#### 2.1.4.1.1 rename()
 ```{r}
 rename(chicago, dewpoint = dptp, pm25 = pm25tmean2)
 ```
-## Create new variables
-### mutate() from {dplyr} or {tidyverse}
+## 2.1.5 Create new variables
+### 2.1.5.1 {dplyr} or {tidyverse}
+#### 2.1.5.1.1 mutate()
 ```{r}
 library(tidyverse)
 restData2 = mutate(restData,zipGroups=cut2(zipCode,g=4))
 ```
-### Create sequences
+### 2.1.5.2 {base} 
+* Create sequences
 ```{r}
 s1 <- seq(1,10,by=2)
 s2 <- seq(1,10,length=3)
 x <- c(1,3,8,25,100); seq(along = x)
 ```
-### Create binary variables
+* Create binary variables
 ```{r}
 restData$nearMe = restData$neighborhood %in% c("Roland Park", "Homeland")
 restData$zipWrong = ifelse(restData$zipCode < 0, TRUE, FALSE)
 ```
-### Create categorical variables
+* Create categorical variables
 ```{r}
 restData$zipGroups = cut(restData$zipCode,breaks=quantile(restData$zipCode))
 ```
@@ -547,11 +556,14 @@ library(Hmisc)
 restData$zipGroups = cut2(restData$zipCode,g=4)
 ```
 `g=` number of quantile groups
-### Create factor variables
+## 2.2 Data types
+### 2.2.1 Factor
+#### 2.2.1.1 {base}
+1. Create factor variables
 ```{r}
 restData$zcf <- factor(restData$zipCode)
 ```
-#### Levels of factor variables
+2. Levels of factor variables
 ```{r}
 yesnofac = factor(yesno,levels=c("yes","no"))
 relevel(yesnofac,ref="no")
