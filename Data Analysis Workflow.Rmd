@@ -2,14 +2,15 @@
 title: "Data Analysis Workflow"
 output:
 ---
-# Step 0 Set working directory
+# 0. Step 0 Get ready
+## 0.1 Set working directory
 ```{r}
 getwd()
 setwd()
 ```
 **Relative** - `setwd("./data")`, `setwd("../")` (Move up one directory)  
 **Absolute** - `setwd("/Users/jtleek/data/")` "/" for path in windows
-## Check for and create directories
+## 0.2 Check for and create directories
 ```{r}
 # check to see if the directory exists
 file.exists("directoryName") 
@@ -768,12 +769,17 @@ table(restData$councilDistrict,restData$zipCode)
 ```
 `useNA="ifany"` if there are any missing values, they'll be an added column to this table, which will be NA, and it'll tell you the number of missing values there is.
 ### Check for missing values
+#### md.pattern() from {mice}
+```{r}
+md.pattern(bc_data, plot = FALSE)
+```
+#### {base}
 ```{r}
 sum(is.na(restData$councilDistrict))
 any(is.na(restData$councilDistrict))
 all(restData$zipCode > 0)
 ```
-#### Row and column sums
+##### Row and column sums
 ```{r}
 colSums(is.na(restData))
 all(colSums(is.na(restData))==0)
