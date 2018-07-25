@@ -1,6 +1,5 @@
 ---
 title: "Data Analysis Workflow"
-output:
 ---
 # 0. Step 0 Get ready
 ## 0.1 Set working directory
@@ -110,8 +109,8 @@ system.time(read.table(file, header=TRUE, sep="\t"))
 - [A list of differences between data.table and data.frame](https://stackoverflow.com/questions/13618488/what-you-can-do-with-data-frame-that-you-cant-in-data-table)
 ## {sqldf}
 sqldf package allows for execution of SQL commands on R data frames
-# Step 1 Get the data
-## From the internet
+# 1. Step 1 Get the data
+## 1.1 From the internet
 ```{r}
 # Download the file
 fileUrl <- "https://data.baltimorecity.gov/api/views/dz54-2aru/rows.csv?accessType=DOWNLOAD"
@@ -123,8 +122,9 @@ list.files("./data")
 dateDownloaded <- date()
 dateDownloaded
 ```
-## From local flat files
-### read.table()
+## 1.2 From local flat files
+### 1.2.1 {base}
+#### 1.2.1.1 read.table()
 ```{r}
 cameraData <- read.table("./data/cameras.csv",sep=",",header=TRUE)
 ```
@@ -138,33 +138,35 @@ Important parameters
 - `na.strings` - set the character that represents a missing value
 - `skip` - number of lines to skip before starting to read
 - `colClasses`
-### read.csv()
+#### 1.2.1.2 read.csv()
 ```{r}
 cameraData <- read.csv("./data/cameras.csv")
 ```
 `read.csv` sets `sep=","` and `header=TRUE`
-### read_csv() from {readr}
+### 1.2.2 {readr}
+#### 1.2.2.1 read_csv()
 ```{r}
 library(readr)
 ozone <- read_csv("data/hourly_44201_2014.csv", col_types = "ccccinnccccccncnncccccc")
 ```
 `col_types=` c = character, i = integer, n = number, d = double, l = logical, D = date, T = date time, t = time, ? = guess, or _/- to skip the column
-## From Excel files
-### read_excel() from {readxl}
+## 1.3 From Excel files
+### 1.3.1 {readxl}
+#### 1.3.1.1 read_excel()
 ```{r}
 download.file(fileUrl,destfile="./data/cameras.xlsx",mode="wb")
 library(readxl)
 cameraData <- read_excel("./data/cameras.xlsx",sheet=1,col_names = TRUE,range=cell_limits(ul=c(18,7),lr=c(23,15)))
 ```
-## From XML or Html
-### {XML}
+## 1.3 From XML or Html
+### 1.3.1 {XML}
 ```{r}
 library(XML)
 fileUrl <- "http://www.w3schools.com/xml/simple.xml"
 doc <- xmlTreeParse(fileUrl,useInternal=TRUE) # or htmlTreeParse() if from Html
 ```
 `useInternal=TRUE` get all the different nodes inside of the file
-#### Inspect the data 
+1. Inspect the data 
 ```{r}
 # get rootNode, the wrapper for the entire document
 rootNode <- xmlRoot(doc)
@@ -180,7 +182,7 @@ rootNode[[1]]
 # access subcomponent
 rootNode[[1]][[1]]
 ```
-#### Programatically extract parts of the file
+2. Programatically extract parts of the file
 ```{r}
 # get all values
 xmlSApply(rootNode,xmlValue)
@@ -195,7 +197,7 @@ To be more specific, use [XPath](http://www.stat.berkeley.edu/~statcur/Workshop2
 xpathSApply(rootNode,"//name",xmlValue)
 xpathSApply(rootNode,"//price",xmlValue)
 ```
-##### Extract content by attributes
+2.1 Extract content by attributes
 ```{r}
 # example
 fileUrl <- "http://espn.go.com/nfl/team/_/name/bal/baltimore-ravens"
@@ -203,7 +205,7 @@ doc <- htmlTreeParse(fileUrl,useInternal=TRUE)
 scores <- xpathSApply(doc,"//li[@class='score']",xmlValue)
 teams <- xpathSApply(doc,"//li[@class='team-name']",xmlValue)
 ```
-#### Notes and further resources
+**Notes and further resources**
 - Official XML tutorials [short](http://www.omegahat.org/RSXML/shortIntro.pdf), [long](http://www.omegahat.org/RSXML/shortIntro.pdf)
 - [An outstanding guide to the XML package](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)
 ## From JSON
