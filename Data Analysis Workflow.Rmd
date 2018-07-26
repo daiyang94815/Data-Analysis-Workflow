@@ -124,7 +124,7 @@ dateDownloaded
 ```
 ## 1.2 From local flat files
 ### 1.2.1 {base}
-**read.table()**
+#### read.table()
 ```{r}
 cameraData <- read.table("./data/cameras.csv",sep=",",header=TRUE)
 ```
@@ -138,13 +138,13 @@ Important parameters
 - `na.strings` - set the character that represents a missing value
 - `skip` - number of lines to skip before starting to read
 - `colClasses`
-**read.csv()**
+#### read.csv()
 ```{r}
 cameraData <- read.csv("./data/cameras.csv")
 ```
 `read.csv` sets `sep=","` and `header=TRUE`
 ### 1.2.2 {readr}
-#### 1.2.2.1 read_csv()
+#### read_csv()
 ```{r}
 library(readr)
 ozone <- read_csv("data/hourly_44201_2014.csv", col_types = "ccccinnccccccncnncccccc")
@@ -152,7 +152,7 @@ ozone <- read_csv("data/hourly_44201_2014.csv", col_types = "ccccinnccccccncnncc
 `col_types=` c = character, i = integer, n = number, d = double, l = logical, D = date, T = date time, t = time, ? = guess, or _/- to skip the column
 ## 1.3 From Excel files
 ### 1.3.1 {readxl}
-#### 1.3.1.1 read_excel()
+#### read_excel()
 ```{r}
 download.file(fileUrl,destfile="./data/cameras.xlsx",mode="wb")
 library(readxl)
@@ -205,7 +205,7 @@ doc <- htmlTreeParse(fileUrl,useInternal=TRUE)
 scores <- xpathSApply(doc,"//li[@class='score']",xmlValue)
 teams <- xpathSApply(doc,"//li[@class='team-name']",xmlValue)
 ```
-**Notes and further resources**
+### 1.3.2 Notes and further resources
 - Official XML tutorials [short](http://www.omegahat.org/RSXML/shortIntro.pdf), [long](http://www.omegahat.org/RSXML/shortIntro.pdf)
 - [An outstanding guide to the XML package](https://www.stat.berkeley.edu/~statcur/Workshop2/Presentations/XML.pdf)
 ## 1.4 From JSON
@@ -229,7 +229,7 @@ myjson <- toJSON(iris, pretty=TRUE)
 cat(myjson)
 ```
 `pretty=TRUE` give nice indentations so it's easy to read
-**Further resources**
+### 1.4.2 Further resources
 - [http://www.json.org/](http://www.json.org/)
 - [A good tutorial on jsonlite](https://www.r-bloggers.com/new-package-jsonlite-a-smarter-json-encoderdecoder/)
 - [jsonlite vignette](https://cran.r-project.org/web/packages/jsonlite/vignettes/json-mapping.pdf)
@@ -273,7 +273,7 @@ dim(affyMisSmall)
 ```{r}
 dbDisconnect(hg19)
 ```
-**Further resources**
+### 1.5.2 Further resources
 - [RMySQL vignette](https://cran.r-project.org/web/packages/RMySQL/RMySQL.pdf)
 - [List of MySQL commands](http://www.pantz.org/software/mysql/mysqlcommands.html)
 - A nice blog post summarizing [some other commands](https://www.r-bloggers.com/mysql-and-r/)
@@ -324,12 +324,12 @@ h5write(c(12,13,14),"example.h5","foo/A",index=list(1:3,1))
 h5read("example.h5","foo/A")
 ```
 `index=list(1:3,1)` give you indices for the dimensions to read/write
-**Further resources**
+#### 1.6.2 Further resources
 - [The rhdf5 tutorial](http://www.bioconductor.org/packages/release/bioc/html/rhdf5.html)
 - The HDF group has [informaton on HDF5 in general](https://portal.hdfgroup.org/display/HDF5/HDF5)
 ## 1.7 From Web
 ### 1.7.1 {base}
-#### 1.7.1.1 readLines()
+#### readLines()
 ```{r}
 # open a connection
 con = url("http://scholar.google.com/citations?user=HI-I6C0AAAAJ&hl=en")
@@ -348,7 +348,7 @@ xpathSApply(html, "//td[@id='col-citedby']", xmlValue)
 ```
 `useInternalNodes=T` gets the complete structure out
 ### 1.7.3 {httr}
-#### 1.7.3.1 GET()
+#### GET()
 ```{r}
 library(httr)
 # GET the URL
@@ -370,7 +370,7 @@ google = handle("http://google.com")
 pg1 = GET(handle=google,path="/")
 pg2 = GET(handle=google,path="search")
 ```
-**Further resources**
+### 1.7.4 Further resources
 - [R Bloggers](https://www.r-bloggers.com/) has a number of examples of web scraping
 - The [httr help file](https://cran.r-project.org/web/packages/httr/httr.pdf) has useful examples
 ## 1.8 From APIs
@@ -469,48 +469,48 @@ X[which(X$var2 > 8),]
 ```
 `which()` returns the indices where conditions are met
 #### 2.1.1.2 {dplyr} or {tidyverse}
-#### 2.1.1.2.1 filter() (rows)
+##### filter() (rows)
 ```{r}
 donor %>% filter(amount > 100)
 donor %>% filter(! type %in% 'Candidate')
 ```
 Operators for conditions: `!, %in%, >, >=, <, <=, ==, &, |`
-#### 2.1.1.2.2 select() (columns)
+##### select() (columns)
 ```{r}
 select(chicago, 1:5)
 select(chicago, city:dptp)
 select(chicago, -(city:dptp))
 ```
-## 2.1.2 Reorder
-### 2.1.2.1 {dplyr} or {tidyverse}
-#### 2.1.2.1.1 arrange()
+### 2.1.2 Reorder
+#### 2.1.2.1 {dplyr} or {tidyverse}
+##### arrange()
 ```{r}
 arrange(chicago, desc(date))
 ```
-### 2.1.2.2 {base}
-#### 2.1.2.2.1 sort()
+#### 2.1.2.2 {base}
+##### sort()
 ```{r}
 sort(X$var1)
 sort(X$var1,decreasing=TRUE)
 sort(X$var2,na.last=TRUE)
 ```
-#### 2.1.2.2.2 order()
+##### order()
 ```{r}
 X[order(X$var1),]
 X[order(X$var1,X$var3),]
 ```
 `order()` returns a permutation which rearranges its first argument into ascending or descending order, breaking ties by further arguments.
-## 2.1.3 Add rows and columns
-### 2.1.3.1 {base}
+### 2.1.3 Add rows and columns
+#### 2.1.3.1 {base}
 ```{r}
 X$var4 <- rnorm(5)
 ```
-* cbind() and rbind()
+##### cbind() and rbind()
 ```{r}
 Y <- cbind(X,rnorm(5))
 ```
-### 2.1.3.2 {dplyr} or {tidyverse}
-#### 2.1.3.2.1 Binding
+#### 2.1.3.2 {dplyr} or {tidyverse}
+##### bind_rows() and bind_cols()
 Append z to y as new rows. 
 ```{r}
 bind_rows(y, z) 
@@ -520,62 +520,32 @@ Append z to y as new columns.
 bind_cols(y, z) 
 ```
 Caution: matches rows by position.
-## 2.1.4 Rename 
-### 2.1.4.1 {dplyr} or {tidyverse}
-#### 2.1.4.1.1 rename()
+### 2.1.4 Rename 
+#### 2.1.4.1 {dplyr} or {tidyverse}
+##### rename()
 ```{r}
 rename(chicago, dewpoint = dptp, pm25 = pm25tmean2)
 ```
-## 2.1.5 Create new variables
-### 2.1.5.1 {dplyr} or {tidyverse}
-#### 2.1.5.1.1 mutate()
+### 2.1.5 Create new variables
+#### 2.1.5.1 {dplyr} or {tidyverse}
+##### mutate()
 ```{r}
 library(tidyverse)
 restData2 = mutate(restData,zipGroups=cut2(zipCode,g=4))
 ```
-### 2.1.5.2 {base} 
-* Create sequences
+#### 2.1.5.2 {base} 
+- Create sequences
 ```{r}
 s1 <- seq(1,10,by=2)
 s2 <- seq(1,10,length=3)
 x <- c(1,3,8,25,100); seq(along = x)
 ```
-* Create binary variables
+- Create binary variables
 ```{r}
 restData$nearMe = restData$neighborhood %in% c("Roland Park", "Homeland")
 restData$zipWrong = ifelse(restData$zipCode < 0, TRUE, FALSE)
 ```
-* Create categorical variables
-```{r}
-restData$zipGroups = cut(restData$zipCode,breaks=quantile(restData$zipCode))
-```
-apply `cut()` to quantitative variable (zipCode). `breaks=` break up according to a list of value (the quantiles to that zip code). Returns a factor variable.
-#### cut2() from {Hmisc}
-```{r}
-library(Hmisc)
-restData$zipGroups = cut2(restData$zipCode,g=4)
-```
-`g=` number of quantile groups
-## 2.2 Data types
-### 2.2.1 Factor
-#### 2.2.1.1 {base}
-1. Create factor variables
-```{r}
-restData$zcf <- factor(restData$zipCode)
-```
-2. Levels of factor variables
-```{r}
-yesnofac = factor(yesno,levels=c("yes","no"))
-relevel(yesnofac,ref="no")
-```
-if no `levels=c("yes","no")`, by default, `factor()` treats the lowest value alphabetically as the first factor variable.
-```{r}
-schoolPub$High.Grade.=factor(schoolPub$High.Grade.,
-                             levels = levelCat,
-                             labels = levelCat,
-                             ordered = T)
-```
-### Common transforms
+#### Common transforms
 - `abs(x)` absolute value
 - `sqrt(x)` square root
 - `ceiling(x)` ceiling(3.475) is 4
@@ -587,44 +557,43 @@ schoolPub$High.Grade.=factor(schoolPub$High.Grade.,
 - `log2(x)`, `log10(x)` other common logs
 - `exp(x)` exponentiating x
 - [http://statmethods.net/management/functions.html](http://statmethods.net/management/functions.html)
-### Further resources
-- A [tutorial](http://plyr.had.co.nz/09-user/) from the developer of plyr
-- Andrew Jaffe's [R notes](http://www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf)
-- A nice [lecture on categorical and factor variables](https://www.stat.berkeley.edu/classes/s133/factors.html)
-## Reshape the data
-### gather(), spread() from {tidyr} or {tidyverse}
-#### Convert columns into rows (with `gather()`)
+### 2.1.6 Reshape the data
+#### 2.1.6.1 {tidyr} or {tidyverse}
+##### Convert columns into rows (with `gather()`)
 ```{r}
 donor %>% gather(column_name, year, c(receipt_year, election_year))
 ```
 `key=column_name` (new) name of column that store (old) column names  
 `value=year` (new) name of column that store (old) values in (old) columns  
 `c(receipt_year, election_year)` A selection of columns. If empty, all variables are selected. You can supply bare variable names, select all variables between x and z with `x:z`, exclude y with `-y`.
-#### Convert rows into columns (with `spread()`)
+##### Convert rows into columns (with `spread()`)
 ```{r}
 donor %>% spread(receipt_year, amount)
 ```
 `key=receipt_year` (old) name or position of column that contains the names of the (new) columns  
 `value=amount` (old) name of column that contains the values of the (new) columns
-### {reshape2}
+#### 2.1.6.2 {reshape2}
 ```{r}
 library(reshape2)
 ```
-#### melt() data frames
+##### melt() data frames
 ```{r}
 mtcars$carname <- rownames(mtcars)
 carMelt <- melt(mtcars,id=c("carname","gear","cyl"),measure.vars=c("mpg","hp"))
 ```
 `id=` creates an id value for car name, for gear and for cylinders. And then melt all the rest of the values. 
-#### Cast (dcast()) data frames
+##### Cast (dcast()) data frames
 ```{r}
 cylData <- dcast(carMelt, cyl ~ variable)
 cylData <- dcast(carMelt, cyl ~ variable,mean)
 ```
 Default aggregation function is length()
-### Aggregate values/ Create a new variable
-#### group_by(), summarise() from {dplyr} or {tidyverse}
-##### Example 1
+#### 2.1.6.3 Further resources
+- [A nice reshape tutorial](https://www.slideshare.net/jeffreybreen/reshaping-data-in-r)
+### 2.1.7 Aggregate values / Create a new variable
+#### 2.1.7.1 {dplyr} or {tidyverse}
+##### group_by(), summarise()
+###### Example 1
 In `donor`, which `type` received the more money in donations from `party` 'REPUBLICAN'?
 ```{r}
 donor %>% group_by(type, party) %>% summarise(dollars = sum(amount, na.rm = TRUE))
@@ -634,7 +603,7 @@ donor %>% group_by(type, party) %>% summarise(dollars = sum(amount, na.rm = TRUE
 - Use `%>%` to 'link' `group_by()` and `summarise()`
 - Aggregation functions: `n(), n_distinct(), sum(), mean(), max(), min()`, etc.
 - `options(pillar.sigfig = 10)` to see more digits for numeric results in tibble
-##### Example 2
+###### Example 2
 In `donor`, what is the largest average donation `amount` for `contributor_state`?
 ```{r}
 donor %>% 
@@ -642,7 +611,7 @@ donor %>%
   summarise(avg_donation = mean(amount, na.rm = TRUE)) %>%
   arrange(desc(avg_donation))
 ```
-##### Example 3
+###### Example 3
 ```{r}
 police %>% 
   transmute(
@@ -658,7 +627,7 @@ police %>%
   summarise(n  = n()) %>%
   write_csv('tidyverse_exercise_output.csv')
 ```
-##### Example 4
+###### Example 4
 ```{r}
 police %>% 
   transmute(
@@ -677,12 +646,13 @@ police %>%
     (initial_type_group %in% 'ROAD RAGE' & district_sector %in% 'L')
   )
 ```
-#### tapply()
+#### 2.1.7.2 {base}
+##### tapply()
 ```{r}
 tapply(InsectSprays$count,InsectSprays$spray,sum)
 ```
 sum up the counts, break down by spray
-#### Another way - split()+apply()+unlist()
+##### Another way - split()+apply()+unlist()
 ```{r}
 spIns =  split(InsectSprays$count,InsectSprays$spray)
 ```
@@ -691,11 +661,12 @@ spIns =  split(InsectSprays$count,InsectSprays$spray)
 sprCount = lapply(spIns,sum)
 unlist(sprCount)
 ```
-#### Another way - split()+sapply()
+##### Another way - split()+sapply()
 ```{r}
 sapply(spIns,sum)
 ```
-#### ddply() from {plyr}
+#### 2.1.7.3 {plyr}
+##### ddply()
 ```{r}
 library(plyr)
 ddply(InsectSprays,.(spray),summarize,sum=sum(count))
@@ -704,13 +675,12 @@ ddply(InsectSprays,.(spray),summarize,sum=sum(count))
 ```{r}
 spraySums <- ddply(InsectSprays,.(spray),summarize,sum=ave(count,FUN=sum))
 ```
-### Further resources
+##### Further resources
 - A [tutorial](http://plyr.had.co.nz/09-user/) from the developer of plyr
-- [A nice reshape tutorial](https://www.slideshare.net/jeffreybreen/reshaping-data-in-r)
 - [A good plyr primer](https://www.r-bloggers.com/a-quick-primer-on-split-apply-combine-problems/)
-## Merge the data
-### joins from {dplyr} or {tidyverse}
-#### Mutating Joins
+### 2.1.8 Merge the data
+#### 2.1.8.1 {dplyr} or {tidyverse}
+##### Mutating Joins
 Join matching rows from b to a.
 ```{r}
 left_join(a, b, by = "x1")
@@ -727,7 +697,7 @@ Join data. Retain all values, all rows.
 ```{r}
 full_join(a, b, by = "x1") 
 ```
-#### Filtering Joins
+##### Filtering Joins
 All rows in a that have a match in b. 
 ```{r}
 semi_join(a, b, by = "x1") 
@@ -736,7 +706,7 @@ All rows in a that do not have a match in b
 ```{r}
 anti_join(a, b, by = "x1") 
 ```
-#### Set Operations
+##### Set Operations
 Rows that appear in both y and z. 
 ```{r}
 intersect(y, z) 
@@ -749,13 +719,314 @@ Rows that appear in y but not z.
 ```{r}
 setdiff(y, z)
 ```
-### merge()
+#### 2.1.8.2 {base}
+##### merge()
 ```{r}
 mergedData = merge(reviews,solutions,by.x="solution_id",by.y="id",all=TRUE)
 ```
 `all=TRUE` full join
-### Further resourece
+#### 2.1.8.3 Further resourece
 - [The quick R data merging page](https://www.statmethods.net/management/merging.html)
+## 2.2 Data types
+### 2.2.1 Strings
+#### 2.2.1.1 Transformation of upper/lower case
+##### {base}
+```{r}
+tolower(names(cameraData))
+toupper()
+```
+##### {stringr}
+```{r}
+str_to_lower()
+str_to_upper()
+str_to_upper(c("i", "ı"), locale = "tr")
+str_to_title()
+```
+pick the set of rules to use by specifying a `locale`
+#### 2.2.1.2 Sort and order
+##### {stringr}
+```{r}
+x <- c("apple", "eggplant", "banana")
+
+str_sort(x, locale = "en")  # English
+#> [1] "apple"    "banana"   "eggplant"
+
+str_sort(x, locale = "haw") # Hawaiian
+#> [1] "apple"    "eggplant" "banana"
+```
+#### 2.2.1.3 Split
+##### {base}
+###### strsplit()+sapply()
+```{r}
+splitNames = strsplit(names(cameraData),"\\.")
+```
+`split="\\."` character vector containing regular expression(s) to use for splitting.
+- strsplit() returns a list
+- use escape character '\' because the period is a reserved character
+Then extract the first element of splited names:
+```{r}
+splitNames[[6]][1]
+firstElement <- function(x){x[1]}
+sapply(splitNames,firstElement)
+```
+#### 2.2.1.4 Substitute
+##### {base}
+###### sub() and gsub()
+```{r}
+testName <- "this_is_a_test"
+
+# sub only the first one
+sub("_","",testName)
+
+# sub all
+gsub("_","",testName)
+```
+#### 2.2.1.5 Search and find values
+##### {base}
+###### grep() and grepl()
+```{r}
+grep("Alameda",cameraData$intersection)
+table(grepl("Alameda",cameraData$intersection))
+grep("Alameda",cameraData$intersection,value=TRUE)
+
+# subset
+cameraData2 <- cameraData[!grepl("Alameda",cameraData$intersection),]
+```
+`pattern="Alameda"` character string containing a regular expression (or character string for fixed = TRUE) to be matched
+- `grep(value = FALSE)` returns a vector of the indices of the elements of x that yielded a match (or not, for `invert = TRUE`)
+- `grep(value = TRUE)` returns a character vector containing the selected elements of x
+- `grepl` returns a logical vector (match or not for each element of x)
+#### 2.2.1.6 Number of characters
+##### {base}
+```{r}
+nchar("Jeffrey Leek")
+```
+##### {stringr}
+```{r}
+str_length(c("a", "R for data science", NA))
+```
+#### 2.2.1.7 Extract parts of the string / subset strings
+##### {base}
+```{r}
+substr("Jeffrey Leek",1,7) # 1st to 7th characters
+```
+##### {stringr}
+###### str_sub()
+```{r}
+x <- c("Apple", "Banana", "Pear")
+str_sub(x, 1, 3)
+# negative numbers count backwards from end
+str_sub(x, -3, -1)
+```
+takes `start` and `end` arguments which give the (inclusive) position of the substring
+```{r}
+str_sub("a", 1, 5)
+```
+won’t fail if the string is too short: it will just return as much as possible
+```{r}
+str_sub(x, 1, 1) <- str_to_lower(str_sub(x, 1, 1))
+x
+```
+can also use the assignment form to modify strings
+#### 2.2.1.8 Combine strings
+##### {base}
+```{r}
+# paste to get a string spereated with a space
+paste("Jeffrey","Leek")
+# paste to get a string without space
+paste0("Jeffrey","Leek")
+```
+##### {stringr}
+###### str_c()
+```{r}
+str_c("x", "y")
+str_c("x", "y", sep = ", ") 
+
+str_c("prefix-", c("a", "b", "c"), "-suffix")
+#> [1] "prefix-a-suffix" "prefix-b-suffix" "prefix-c-suffix"
+```
+Use the `sep` argument to control how they’re separated
+```{r}
+str_c(c("x", "y", "z"), collapse = ", ")
+#> [1] "x, y, z"
+```
+To collapse a vector of strings into a single string, use `collapse`
+```{r}
+name <- "Hadley"
+time_of_day <- "morning"
+birthday <- FALSE
+
+str_c(
+  "Good ", time_of_day, " ", name,
+  if (birthday) " and HAPPY BIRTHDAY",
+  "."
+)
+```
+Objects of length 0 are silently dropped. This is particularly useful in conjunction with `if`
+#### 2.2.1.9 Trim whitespace
+##### {stringr}
+```{r}
+# removes whitespace from start and end of string
+str_trim("Jeff      ")
+```
+#### 2.2.1.10 Regular expression
+##### 2.2.1.10.1 Basic matches
+`.` is used to refer to any character
+```{r}
+9.11
+```
+##### 2.2.1.10.2 Anchors
+`^` represents the start of a line
+```{r}
+^i think
+```
+`$` represents the end of a line
+```{r}
+morning$
+```
+You can also match the boundary between words with `\b`. You can search for `\bsum\b` to avoid matching `summarise`, `summary`, `rowsum` and so on.  
+##### 2.2.1.10.3 Character Classes with [] and alternatives
+- `\d`: matches any digit.
+- `\s`: matches any whitespace (e.g. space, tab, newline).
+- `[abc]`: matches a, b, or c.
+- `[^abc]`: matches anything except a, b, or c.
+A character class containing a single character is a nice alternative to backslash escapes when you want to include a single metacharacter in a regex. Many people find this more readable.
+```{r}
+# Look for a literal character that normally has special meaning in a regex
+str_view(c("abc", "a.c", "a*c", "a c"), "a[.]c")
+str_view(c("abc", "a.c", "a*c", "a c"), ".[*]c")
+str_view(c("abc", "a.c", "a*c", "a c"), "a[ ]")
+```
+This works for most (but not all) regex metacharacters: `$` `.` `|` `?` `*` `+` `(` `)` `[` `{`. Unfortunately, a few characters have special meaning even inside a character class and must be handled with backslash escapes: `]` `\` `^` and `-`.  
+`|` "or"
+```{r}
+flood|fire
+flood|earthquake|hurricane|coldfire
+str_view(c("grey", "gray"), "gr(e|a)y")
+```
+list a set of characters we will accept at a given point in the match
+```{r}
+[Bb][Uu][Ss][Hh]
+
+^[Ii] am
+
+^[0-9][a-zA-Z]
+
+^[Gg]ood|[Bb]ad
+^([Gg]ood|[Bb]ad)
+```
+When used at the beginning of a character class, the "^" is also a metacharacter and indicates matching characters NOT in the indicated class
+```{r}
+[^?.]$
+```
+##### 2.2.1.10.4 Repetition
+- `?`: 0 or 1
+- `+`: 1 or more
+- `*`: 0 or more
+```{r}
+x <- "1888 is the longest year in Roman numerals: MDCCCLXXXVIII"
+str_view(x, "CC?")
+str_view(x, "CC+")
+str_view(x, 'C[LX]+')
+```
+
+```{r}
+[Gg]eorge( [Ww]\.)? [Bb]ush
+```
+
+```{r}
+(.*)
+[0-9]+ (.*)[0-9]+
+```
+`{}` are referred to as interval quantifiers which specify the minimum and maximum number of matches of an expression
+```{r}
+[Bb]ush ([^ ]+ +){1,5}debate
+```
+specify the number of matches precisely:
+- `{n}`: exactly n
+- `{n,}`: n or more
+- `{,m}`: at most m
+- `{n,m}`: between n and m
+```{r}
+str_view(x, "C{2}")
+str_view(x, "C{2,}")
+str_view(x, "C{2,3}")
+```
+The greediness of `*` (longest possible match) can be turned off with the `?`
+```{r}
+^s(.*?)s$
+str_view(x, 'C{2,3}?')
+str_view(x, 'C[LX]+?')
+```
+##### 2.2.1.10.5 Grouping and backreferences
+`()` not only limits the scope of alternatives divided by a `|`, but also can be used to "remember" text matched by the subexpression enclosed; We refer to the matched text with `\1`, `\2`, etc.
+```{r}
++([a-zA-Z]+) +\1 +
+str_view(fruit, "(..)\\1", match = TRUE)
+```
+#### 2.2.1.11 Detect matches
+##### {stringr}
+###### str_detect()
+```{r}
+x <- c("apple", "banana", "pear")
+str_detect(x, "e")
+```
+returns a logical vector the same length as the input
+```{r}
+# How many common words start with t?
+sum(str_detect(words, "^t"))
+#> [1] 65
+# What proportion of common words end with a vowel?
+mean(str_detect(words, "[aeiou]$"))
+#> [1] 0.277
+```
+###### str_detect() or str_subset(): Logical subsetting
+select the elements that match a pattern
+```{r}
+words[str_detect(words, "x$")]
+#> [1] "box" "sex" "six" "tax"
+str_subset(words, "x$")
+#> [1] "box" "sex" "six" "tax"
+
+df %>% 
+  filter(str_detect(words, "x$"))
+```
+###### `str_count()`
+### 2.2.2 Factor
+#### 2.2.2.1 Create factor variables
+##### 2.2.2.1.1 {base}
+```{r}
+restData$zcf <- factor(restData$zipCode)
+```
+
+```{r}
+restData$zipGroups = cut(restData$zipCode,breaks=quantile(restData$zipCode))
+```
+apply `cut()` to quantitative variable (zipCode). `breaks=` break up according to a list of value (the quantiles to that zip code). Returns a factor variable.
+##### 2.2.2.1.2 {Hmisc}
+###### cut2()
+```{r}
+library(Hmisc)
+restData$zipGroups = cut2(restData$zipCode,g=4)
+```
+`g=` number of quantile groups
+#### 2.2.2.2 Levels of factor variables
+##### 2.2.2.2.1 {base}
+```{r}
+yesnofac = factor(yesno,levels=c("yes","no"))
+relevel(yesnofac,ref="no")
+```
+if no `levels=c("yes","no")`, by default, `factor()` treats the lowest value alphabetically as the first factor variable.
+```{r}
+schoolPub$High.Grade.=factor(schoolPub$High.Grade.,
+                             levels = levelCat,
+                             labels = levelCat,
+                             ordered = T)
+```
+#### 2.2.2. Further resources
+- A nice [lecture on categorical and factor variables](https://www.stat.berkeley.edu/classes/s133/factors.html)
+- [Wrangling categorical data in R](https://peerj.com/preprints/3163/)
+
 ## Summarize the data
 ### Look at a bit of the data
 ```{r}
@@ -822,125 +1093,7 @@ ftable(xt)
 object.size(fakeData)
 print(object.size(fakeData),units="Mb")
 ```
-## Edit text variables
-### transformation of upper/lower case
-```{r}
-tolower(names(cameraData))
-toupper()
-```
-### split
-#### strsplit()+sapply()
-```{r}
-splitNames = strsplit(names(cameraData),"\\.")
-```
-`split="\\."` character vector containing regular expression(s) to use for splitting.
-- strsplit() returns a list
-- use escape character '\' because the period is a reserved character
-Then extract the first element of splited names:
-```{r}
-splitNames[[6]][1]
-firstElement <- function(x){x[1]}
-sapply(splitNames,firstElement)
-```
-### substitute
-#### sub() and gsub()
-```{r}
-testName <- "this_is_a_test"
 
-# sub only the first one
-sub("_","",testName)
-
-# sub all
-gsub("_","",testName)
-```
-### search and find values
-#### grep() and grepl()
-```{r}
-grep("Alameda",cameraData$intersection)
-table(grepl("Alameda",cameraData$intersection))
-grep("Alameda",cameraData$intersection,value=TRUE)
-
-# subset
-cameraData2 <- cameraData[!grepl("Alameda",cameraData$intersection),]
-```
-`pattern="Alameda"` character string containing a regular expression (or character string for fixed = TRUE) to be matched
-- `grep(value = FALSE)` returns a vector of the indices of the elements of x that yielded a match (or not, for `invert = TRUE`)
-- `grep(value = TRUE)` returns a character vector containing the selected elements of x
-- `grepl` returns a logical vector (match or not for each element of x)
-### more string functions
-#### {stringr}
-```{r}
-# number of characters
-nchar("Jeffrey Leek")
-# extract parts of the string
-substr("Jeffrey Leek",1,7) # 1st to 7th characters
-# paste to get a string spereated with a space
-paste("Jeffrey","Leek")
-# paste to get a string without space
-paste0("Jeffrey","Leek")
-# removes whitespace from start and end of string
-str_trim("Jeff      ")
-```
-## Regular expression
-### metacharacter
-`^` represents the start of a line
-```{r}
-^i think
-```
-`$` represents the end of a line
-```{r}
-morning$
-```
-`.` is used to refer to any character
-```{r}
-9.11
-```
-`|` "or"
-```{r}
-flood|fire
-flood|earthquake|hurricane|coldfire
-```
-`?` indicates that the indicated expression is optional
-```{r}
-[Gg]eorge( [Ww]\.)? [Bb]ush
-```
-we wanted to match a "." as a literal period; to do that, we had to "escape" the metacharacter, preceding it with a backslash In general, we have to do this for any metacharacter we want to include in our match  
-`*` and `+` indicate repetition; `*` means "any number, including none, of the item" and `+` means "at least one of the item"
-```{r}
-(.*)
-[0-9]+ (.*)[0-9]+
-```
-`{}` are referred to as interval quantifiers which specify the minimum and maximum number of matches of an expression
-```{r}
-[Bb]ush ([^ ]+ +){1,5}debate
-```
-- `m,n` m<=matches<=n
-- `m` matches==m
-- `m,` matches>=m
-`()` not only limits the scope of alternatives divided by a `|`, but also can be used to "remember" text matched by the subexpression enclosed; We refer to the matched text with `\1`, `\2`, etc.
-```{r}
-+([a-zA-Z]+) +\1 +
-```
-The greediness of `*` (longest possible match) can be turned off with the `?`
-```{r}
-^s(.*?)s$
-```
-### Character Classes with []
-list a set of characters we will accept at a given point in the match
-```{r}
-[Bb][Uu][Ss][Hh]
-
-^[Ii] am
-
-^[0-9][a-zA-Z]
-
-^[Gg]ood|[Bb]ad
-^([Gg]ood|[Bb]ad)
-```
-When used at the beginning of a character class, the "^" is also a metacharacter and indicates matching characters NOT in the indicated class
-```{r}
-[^?.]$
-```
 ## Work with date
 ### format date
 - `%d` day as number (0-31)
