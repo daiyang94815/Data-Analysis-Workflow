@@ -1357,8 +1357,9 @@ gss_cat %>%
 #### 2.2.2.5 Further resources
 - A nice [lecture on categorical and factor variables](https://www.stat.berkeley.edu/classes/s133/factors.html)
 - [Wrangling categorical data in R](https://peerj.com/preprints/3163/)
-## Work with date
-### format date
+### 2.2.3 Date and time
+#### 2.2.3.1 {base}
+##### format date
 - `%d` day as number (0-31)
 - `%a` abbreviated weekday
 - `%A` unabbreviated weekday
@@ -1370,14 +1371,14 @@ gss_cat %>%
 ```{r}
 format(Sys.Date(),"%a %b %d")
 ```
-### create date
+##### create date
 ```{r}
 x = c("1jan1960", "2jan1960", "31mar1960", "30jul1960")
 z = as.Date(x, "%d%b%Y")
 z[1] - z[2]
 as.numeric(z[1]-z[2])
 ```
-### attribute of date
+##### attribute of date
 ```{r}
 weekdays(d2)
 months(d2)
@@ -1385,24 +1386,218 @@ months(d2)
 # days from origin
 julian(d2) 
 ```
-### {lubridate}
+#### 2.2.3.2 {lubridate}
+##### 2.2.3.2.1 Create date/time
+1. From strings
 ```{r}
-library(lubridate)
-ymd("20140108")
 mdy("08/04/2013")
 dmy("03-04-2013")
+ymd(20170131)
+
+ymd("2017-01-31")
+mdy("January 31st, 2017")
+dmy("31-Jan-2017")
 
 ymd_hms("2011-08-03 10:15:03")
 ymd_hms("2011-08-03 10:15:03",tz="Pacific/Auckland")
-?Sys.timezone
 
 x = dmy(c("1jan2013", "2jan2013", "31mar2013", "30jul2013"))
+```
+2. From individual components
+`make_date()`, `make_datetime()`
+```{r}
+flights %>% 
+  select(year, month, day, hour, minute) %>% 
+  mutate(departure = make_datetime(year, month, day, hour, minute))
+```
+when you use date-times in a numeric context (like in a histogram), 1 means 1 second, so a binwidth of 86400 means one day. For dates, 1 means 1 day.
+```{r}
+flights_dt %>% 
+  ggplot(aes(dep_time)) + 
+  geom_freqpoly(binwidth = 86400) # 86400 seconds = 1 day
+
+flights_dt %>% 
+  filter(dep_time < ymd(20130102)) %>% 
+  ggplot(aes(dep_time)) + 
+  geom_freqpoly(binwidth = 600) # 600 s = 10 minutes
+```
+3. From other types
+```{r}
+as_datetime(today())
+as_date(now())
+```
+Sometimes you’ll get date/times as numeric offsets from the “Unix Epoch”, 1970-01-01. If the offset is in seconds, use as_datetime(); if it’s in days, use as_date().
+```{r}
+as_datetime(60 * 60 * 10)
+#> [1] "1970-01-01 10:00:00 UTC"
+as_date(365 * 10 + 2)
+#> [1] "1980-01-01"
+```
+##### 2.2.3.2.2 Date-time components
+###### Get components
+- `year()`
+- `month()`
+- `mday()` (day of the month)
+- `yday()` (day of the year)
+- `wday()` (day of the week)
+- `hour()`
+- `minute()`
+- `second()`
+```{r}
 # weekday
 wday(x[1])
 # show weekday abbreviation
 wday(x[1],label=TRUE)
 ```
-#### Further resources
+For `month()` and `wday()` you can set `label = TRUE` to return the abbreviated name of the month or day of the week. Set `abbr = FALSE` to return the full name.
+```{r}
+datetime <- ymd_hms("2016-07-08 12:34:56")
+
+month(datetime, label = TRUE)
+wday(datetime, label = TRUE, abbr = FALSE)
+```
+###### Rounding
+`floor_date()`, `round_date()`, and `ceiling_date()`. Each function takes a vector of dates to adjust and then the name of the unit round down (floor), round up (ceiling), or round to.
+```{r}
+flights_dt %>% 
+  count(week = floor_date(dep_time, "week")) %>% 
+  ggplot(aes(week, n)) +
+    geom_line()
+```
+###### Set components
+```{r}
+(datetime <- ymd_hms("2016-07-08 12:34:56"))
+year(datetime) <- 2020
+month(datetime) <- 01
+hour(datetime) <- hour(datetime) + 1
+```
+`update()` allows you to set multiple values at once.
+```{r}
+update(datetime, year = 2020, month = 2, mday = 2, hour = 2)
+```
+If values are too big, they will roll-over:
+```{r}
+ymd("2015-02-01") %>% 
+  update(mday = 30)
+ymd("2015-02-01") %>% 
+  update(hour = 400)
+```
+use `update()` to show the distribution of flights across the course of the day for every day of the year:
+```{r}
+flights_dt %>% 
+  mutate(dep_hour = update(dep_time, yday = 1)) %>% 
+  ggplot(aes(dep_hour)) +
+    geom_freqpoly(binwidth = 300)
+```
+Setting larger components of a date to a constant is a powerful technique that allows you to explore patterns in the smaller components.
+##### 2.2.3.2.3 Time spans
+###### duration
+```{r}
+h_age <- today() - ymd(19791014)
+as.duration(h_age)
+```
+Durations always record the time span in seconds. Larger units are created by converting minutes, hours, days, weeks, and years to seconds at the standard rate (60 seconds in a minute, 60 minutes in an hour, 24 hours in day, 7 days in a week, 365 days in a year).
+```{r}
+dseconds(15)
+#> [1] "15s"
+dminutes(10)
+#> [1] "600s (~10 minutes)"
+dhours(c(12, 24))
+#> [1] "43200s (~12 hours)" "86400s (~1 days)"
+ddays(0:5)
+#> [1] "0s"                "86400s (~1 days)"  "172800s (~2 days)"
+#> [4] "259200s (~3 days)" "345600s (~4 days)" "432000s (~5 days)"
+dweeks(3)
+#> [1] "1814400s (~3 weeks)"
+dyears(1)
+#> [1] "31536000s (~52.14 weeks)"
+```
+
+```{r}
+2 * dyears(1)
+dyears(1) + dweeks(12) + dhours(15)
+tomorrow <- today() + ddays(1)
+last_year <- today() - dyears(1)
+```
+###### Periods
+Periods are time spans but don’t have a fixed length in seconds, instead they work with “human” times, like days and months. That allows them work in a more intuitive way:
+```{r}
+one_pm
+#> [1] "2016-03-12 13:00:00 EST"
+one_pm + days(1)
+#> [1] "2016-03-13 13:00:00 EDT"
+```
+
+```{r}
+seconds(15)
+minutes(10)
+hours(c(12, 24))
+days(7)
+months(1:6)
+weeks(3)
+years(1)
+
+10 * (months(6) + days(1))
+days(50) + hours(25) + minutes(2)
+```
+Compared to durations, periods are more likely to do what you expect:
+```{r}
+# A leap year
+ymd("2016-01-01") + dyears(1)
+#> [1] "2016-12-31"
+ymd("2016-01-01") + years(1)
+#> [1] "2017-01-01"
+
+# Daylight Savings Time
+one_pm + ddays(1)
+#> [1] "2016-03-13 14:00:00 EDT"
+one_pm + days(1)
+#> [1] "2016-03-13 13:00:00 EDT"
+```
+###### Intervals
+An **interval** is a duration with a starting point: that makes it precise so you can determine exactly how long it is:
+```{r}
+next_year <- today() + years(1)
+(today() %--% next_year) / ddays(1)
+```
+To find out how many periods fall into an interval, you need to use integer division:
+```{r}
+(today() %--% next_year) %/% days(1)
+```
+###### Summary
+If you only care about physical time, use a duration; if you need to add human times, use a period; if you need to figure out how long a span is in human units, use an interval.
+##### 2.2.3.2.4 Time zones
+In R, the time zone is an attribute of the date-time that only controls printing. For example, these three objects represent the same instant in time:
+```{r}
+(x1 <- ymd_hms("2015-06-01 12:00:00", tz = "America/New_York"))
+(x2 <- ymd_hms("2015-06-01 18:00:00", tz = "Europe/Copenhagen"))
+(x3 <- ymd_hms("2015-06-02 04:00:00", tz = "Pacific/Auckland"))
+
+#> Time difference of 0 secs
+x1 - x2
+x1 - x3
+```
+Unless otherwise specified, lubridate always uses UTC. UTC (Coordinated Universal Time) does not have DST, which makes a convenient representation for computation. Operations that combine date-times, like c(), will often drop the time zone. In that case, the date-times will display in your local time zone:
+```{r}
+x4 <- c(x1, x2, x3)
+```
+##### Change the time zone
+1. Keep the instant in time the same, and change how it’s displayed. Use this when the instant is correct, but you want a more natural display.
+```{r}
+x4a <- with_tz(x4, tzone = "Australia/Lord_Howe")
+
+# no time difference
+x4a - x4
+```
+2. Change the underlying instant in time. Use this when you have an instant that has been labelled with the incorrect time zone, and you need to fix it.
+```{r}
+x4b <- force_tz(x4, tzone = "Australia/Lord_Howe")
+
+x4b - x4
+#> Time differences in hours
+#> [1] -14.5 -14.5 -14.5
+```
+##### 2.2.3.2.5 Further resources
 - More information in this nice [lubridate tutorial](http://www.r-statistics.com/2012/03/do-more-with-dates-and-times-in-r-with-lubridate-1-1-0/)
 - The [lubridate vignette](http://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html) is the same content
 - Ultimately you want your dates and times as class "Date" or the classes "POSIXct", "POSIXlt". For more information type `?POSIXlt`

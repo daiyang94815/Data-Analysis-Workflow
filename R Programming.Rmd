@@ -1,0 +1,31 @@
+---
+title: "R Programming"
+---
+# Pipes
+The pipe, `%>%`, comes from the `magrittr` package by Stefan Milton Bache. Packages in the tidyverse load `%>%` for you automatically
+```{r}
+library(magrittr)
+```
+## Other tools from magrittr
+- `%T>%` (“tee” pipe) works like `%>%` except that it returns the left-hand side instead of the right-hand side.
+```{r}
+rnorm(100) %>%
+  matrix(ncol = 2) %>%
+  plot() %>%
+  str()
+#>  NULL
+
+rnorm(100) %>%
+  matrix(ncol = 2) %T>%
+  plot() %>%
+  str()
+#>  num [1:50, 1:2] -0.387 -0.785 -1.057 -0.796 -1.756 ...
+```
+- If you’re working with functions that don’t have a data frame based API
+(i.e. you pass them individual vectors, not a data frame and expressions to be evaluated in the context of that data frame), you might find `%$%` useful. It “explodes” out the variables in a data frame so that you can refer to them explicitly. This is useful when working with many functions in base R:
+```{r}
+mtcars %$%
+  cor(disp, mpg)
+#> [1] -0.848
+```
+
