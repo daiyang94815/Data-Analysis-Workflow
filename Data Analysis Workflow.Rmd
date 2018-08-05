@@ -27,6 +27,16 @@ rewrite the names of the columns to remove any spaces
 ```{r}
 names(ozone) <- make.names(names(ozone))
 ```
+## {ggplot2}
+I’ve coloured the models by `-dist`: this is an easy way to make sure that the best models (i.e. the ones with the smallest distance) get the brighest colours.
+```{r}
+ggplot(sim1, aes(x, y)) + 
+  geom_point(size = 2, colour = "grey30") + 
+  geom_abline(
+    aes(intercept = a1, slope = a2, colour = -dist), 
+    data = filter(models, rank(dist) <= 10)
+  )
+```
 ## {data.table}
 Much, much faster at subsetting, group, and updating
 ### Create data tables just like data frames
@@ -109,6 +119,7 @@ system.time(read.table(file, header=TRUE, sep="\t"))
 - [A list of differences between data.table and data.frame](https://stackoverflow.com/questions/13618488/what-you-can-do-with-data-frame-that-you-cant-in-data-table)
 ## {sqldf}
 sqldf package allows for execution of SQL commands on R data frames
+
 # 1. Step 1 Get the data
 ## 1.1 From the internet
 ```{r}
@@ -441,6 +452,7 @@ repo <- fromJSON(toJSON(content(req)))
 ## 1.11 From music data
 - [tuneR](https://cran.r-project.org/web/packages/tuneR/)
 - [seewave](http://rug.mnhn.fr/seewave/)
+
 # 2. Step 2 Clean the data
 ## 2.1 Data transformation
 ### 2.1.1 Subset
@@ -814,22 +826,7 @@ sub("_","",testName)
 # sub all
 gsub("_","",testName)
 ```
-#### 2.2.1.5 Search and find values
-##### {base}
-###### grep() and grepl()
-```{r}
-grep("Alameda",cameraData$intersection)
-table(grepl("Alameda",cameraData$intersection))
-grep("Alameda",cameraData$intersection,value=TRUE)
-
-# subset
-cameraData2 <- cameraData[!grepl("Alameda",cameraData$intersection),]
-```
-`pattern="Alameda"` character string containing a regular expression (or character string for fixed = TRUE) to be matched
-- `grep(value = FALSE)` returns a vector of the indices of the elements of x that yielded a match (or not, for `invert = TRUE`)
-- `grep(value = TRUE)` returns a character vector containing the selected elements of x
-- `grepl` returns a logical vector (match or not for each element of x)
-#### 2.2.1.6 Number of characters
+#### 2.2.1.5 Number of characters
 ##### {base}
 ```{r}
 nchar("Jeffrey Leek")
@@ -838,7 +835,7 @@ nchar("Jeffrey Leek")
 ```{r}
 str_length(c("a", "R for data science", NA))
 ```
-#### 2.2.1.7 Extract parts of the string / subset strings
+#### 2.2.1.6 Extract parts of the string / subset strings
 ##### {base}
 ```{r}
 substr("Jeffrey Leek",1,7) # 1st to 7th characters
@@ -861,7 +858,7 @@ str_sub(x, 1, 1) <- str_to_lower(str_sub(x, 1, 1))
 x
 ```
 can also use the assignment form to modify strings
-#### 2.2.1.8 Combine strings
+#### 2.2.1.7 Combine strings
 ##### {base}
 ```{r}
 # paste to get a string spereated with a space
@@ -896,19 +893,19 @@ str_c(
 )
 ```
 Objects of length 0 are silently dropped. This is particularly useful in conjunction with `if`
-#### 2.2.1.9 Trim whitespace
+#### 2.2.1.8 Trim whitespace
 ##### {stringr}
 ```{r}
 # removes whitespace from start and end of string
 str_trim("Jeff      ")
 ```
-#### 2.2.1.10 Regular expression
-##### 2.2.1.10.1 Basic matches
+#### 2.2.1.9 Regular expression
+##### 2.2.1.9.1 Basic matches
 `.` is used to refer to any character
 ```{r}
 9.11
 ```
-##### 2.2.1.10.2 Anchors
+##### 2.2.1.9.2 Anchors
 `^` represents the start of a line
 ```{r}
 ^i think
@@ -918,7 +915,7 @@ str_trim("Jeff      ")
 morning$
 ```
 You can also match the boundary between words with `\b`. You can search for `\bsum\b` to avoid matching `summarise`, `summary`, `rowsum` and so on.  
-##### 2.2.1.10.3 Character Classes with [] and alternatives
+##### 2.2.1.9.3 Character Classes with [] and alternatives
 - `\d`: matches any digit.
 - `\s`: matches any whitespace (e.g. space, tab, newline).
 - `[abc]`: matches a, b, or c.
@@ -952,7 +949,7 @@ When used at the beginning of a character class, the "^" is also a metacharacter
 ```{r}
 [^?.]$
 ```
-##### 2.2.1.10.4 Repetition
+##### 2.2.1.9.4 Repetition
 - `?`: 0 or 1
 - `+`: 1 or more
 - `*`: 0 or more
@@ -991,13 +988,13 @@ The greediness of `*` (longest possible match) can be turned off with the `?`
 str_view(x, 'C{2,3}?')
 str_view(x, 'C[LX]+?')
 ```
-##### 2.2.1.10.5 Grouping and backreferences
+##### 2.2.1.9.5 Grouping and backreferences
 `()` not only limits the scope of alternatives divided by a `|`, but also can be used to "remember" text matched by the subexpression enclosed; We refer to the matched text with `\1`, `\2`, etc.
 ```{r}
 +([a-zA-Z]+) +\1 +
 str_view(fruit, "(..)\\1", match = TRUE)
 ```
-##### 2.2.1.10.6 Other uses of regular expressions
+##### 2.2.1.9.6 Other uses of regular expressions
 ###### apropos()
 searches all objects available from the global environment
 ```{r}
@@ -1009,7 +1006,21 @@ lists all the files in a directory. The `pattern` argument takes a regular expre
 # find all the R Markdown files in the current directory
 head(dir(pattern = "\\.Rmd$"))
 ```
-#### 2.2.1.11 Detect matches
+#### 2.2.1.10 Detect matches
+##### {base}
+###### grep() and grepl()
+```{r}
+grep("Alameda",cameraData$intersection)
+table(grepl("Alameda",cameraData$intersection))
+grep("Alameda",cameraData$intersection,value=TRUE)
+
+# subset
+cameraData2 <- cameraData[!grepl("Alameda",cameraData$intersection),]
+```
+`pattern="Alameda"` character string containing a regular expression (or character string for fixed = TRUE) to be matched
+- `grep(value = FALSE)` returns a vector of the indices of the elements of x that yielded a match (or not, for `invert = TRUE`)
+- `grep(value = TRUE)` returns a character vector containing the selected elements of x
+- `grepl` returns a logical vector (match or not for each element of x)
 ##### {stringr}
 ###### str_detect()
 ```{r}
@@ -1047,7 +1058,7 @@ str_count(x, "a")
 mean(str_count(words, "[aeiou]"))
 #> [1] 1.99
 ```
-#### 2.2.1.12 Extract matches
+#### 2.2.1.11 Extract matches
 ##### {stringr}
 ###### str_extract()
 extract the actual text of a match
@@ -1092,7 +1103,7 @@ tibble(sentence = sentences) %>%
     remove = FALSE
   )
 ```
-#### 2.2.1.13 Replace matches
+#### 2.2.1.12 Replace matches
 ##### {stringr}
 ###### str_replace(), str_replace_all()
 replace matches with new strings
@@ -1114,7 +1125,7 @@ Instead of replacing with a fixed string you can use backreferences to insert co
 sentences %>% 
   str_replace("([^ ]+) ([^ ]+) ([^ ]+)", "\\1 \\3 \\2")
 ```
-#### 2.2.1.14 Other types of pattern
+#### 2.2.1.13 Other types of pattern
 ##### {base}
 ###### regex()
 When you use a pattern that’s a string, it’s automatically wrapped into a call to `regex()`
@@ -1597,38 +1608,102 @@ x4b - x4
 #> Time differences in hours
 #> [1] -14.5 -14.5 -14.5
 ```
-##### 2.2.3.2.5 Further resources
+##### 2.2.3.2.5 Further resources and notes
 - More information in this nice [lubridate tutorial](http://www.r-statistics.com/2012/03/do-more-with-dates-and-times-in-r-with-lubridate-1-1-0/)
 - The [lubridate vignette](http://cran.r-project.org/web/packages/lubridate/vignettes/lubridate.html) is the same content
 - Ultimately you want your dates and times as class "Date" or the classes "POSIXct", "POSIXlt". For more information type `?POSIXlt`
-## Summarize the data
-### Look at a bit of the data
+- POSIXct’s are always easier to work with, so if you find you have a POSIXlt, you should always convert it to a regular date time `lubridate::as_date_time()`.
+## 2.3 Further resources
+- [Data Wrangling with {dplyr} and {tidyr} Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
+- Andrew Jaffe's [lecture notes](http://www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf)
+
+# 3. Step 3 Exploratory Data Analysis
+## 3.1 Summarize the data
+### 3.1.1 Basic summary
+#### {base}
+Look at a bit of the data
 ```{r}
 head(restData,n=3)
 tail(restData,n=3)
 ```
-### summary()
+Five Number Summary
 ```{r}
 summary(restData)
+summary(pollution$pm25)
 ```
-### More in depth information
+More in depth information
 ```{r}
 str(restData)
 ```
-### Distribution
-#### Quantiles of quantitative variables
+### 3.1.2 Distribution
+#### 3.1.2.1 One dimension
+##### {base}
+###### Quantiles of quantitative variables
 ```{r}
 quantile(restData$councilDistrict,na.rm=TRUE)
 quantile(restData$councilDistrict,probs=c(0.5,0.75,0.9))
 ```
-#### table()
+###### table()
 ```{r}
 table(restData$zipCode,useNA="ifany")
 table(restData$councilDistrict,restData$zipCode)
 ```
 `useNA="ifany"` if there are any missing values, they'll be an added column to this table, which will be NA, and it'll tell you the number of missing values there is.
-### Check for missing values
-#### md.pattern() from {mice}
+###### Boxplot
+```{r}
+boxplot(pollution$pm25, col = "blue")
+```
+###### Histogram
+```{r}
+hist(pollution$pm25, col = "green", breaks = 100)
+rug(pollution$pm25)
+```
+`rug()` plots all of the points in your dataset along underneath the histogram  
+`breaks=100` the number of bars in the histogram
+###### Overlaying Features
+```{r}
+abline(h = 12)
+abline(v = median(pollution$pm25), col = "magenta", lwd = 4)
+```
+`h=` horizontal line  
+`v=` vertical line  
+`lwd=`line width
+###### Barplot
+```{r}
+barplot(table(pollution$region), col = "wheat", main = "Number of Counties in Each Region")
+```
+#### 3.1.2.2 Two dimensions
+##### {base}
+###### Multiple Boxplots
+```{r}
+boxplot(pm25 ~ region, data = pollution, col = "red")
+```
+`pm25 ~ region` `pm25` is a numeric vector of data values to be split into groups according to the grouping variable `region` (usually a factor)
+###### Multiple Histograms
+```{r}
+par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
+hist(subset(pollution, region == "east")$pm25, col = "green")
+hist(subset(pollution, region == "west")$pm25, col = "green")
+```
+`par()` set or query graphical parameters  
+`mar=` A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot.  
+`mfrow=` A vector of the form c(nr, nc). Subsequent figures will be drawn in an nr-by-nc array on the device by columns (mfcol), or rows (mfrow), respectively.
+###### Scatterplot
+```{r}
+with(pollution, plot(latitude, pm25, col = region))
+abline(h = 12, lwd = 2, lty = 2)
+```
+`col=region` break out color groups by region  
+`lty` line type
+###### Multiple Scatterplots
+```{r}
+par(mfrow = c(1, 2), mar = c(5, 4, 2, 1))
+with(subset(pollution, region == "west"), plot(latitude, pm25, main = "West"))
+with(subset(pollution, region == "east"), plot(latitude, pm25, main = "East"))
+```
+### 3.1.3 Check for missing values
+#### {mice}
+md.pattern()
 ```{r}
 md.pattern(bc_data, plot = FALSE)
 ```
@@ -1638,16 +1713,17 @@ sum(is.na(restData$councilDistrict))
 any(is.na(restData$councilDistrict))
 all(restData$zipCode > 0)
 ```
-##### Row and column sums
+Row and column sums
 ```{r}
 colSums(is.na(restData))
 all(colSums(is.na(restData))==0)
 ```
-### Values with specific characteristics
+### 3.1.4 Values with specific characteristics
+#### {base}
 ```{r}
 table(restData$zipCode %in% c("21212","21213"))
 ```
-### Cross tabs
+##### Cross tables
 ```{r}
 xt <- xtabs(Freq ~ Gender + Admit,data=DF)
 ```
@@ -1657,16 +1733,32 @@ xt <- xtabs(Freq ~ Gender + Admit,data=DF)
 xt = xtabs(breaks ~.,data=warpbreaks)
 ```
 `~.` break down by all the variables in the data set
-### Flat tables
+##### Flat tables
 ```{r}
 ftable(xt)
 ```
 `ftable` make flat tables from the crosstabs. It will summarize the data in a much smaller, more compact form. So it's easier to see.
-### Size of a data set
+### 3.1.5 Size of a data set
+#### {base}
 ```{r}
 object.size(fakeData)
 print(object.size(fakeData),units="Mb")
 ```
+## 3.2 Model
+simple linear model
+```{r}
+sim1_mod <- lm(y ~ x, data = sim1)
+coef(sim1_mod)
+```
+## 3. Further resources
+- [R Graph Gallery](https://www.r-graph-gallery.com/)
+- [R Bloggers](https://www.r-bloggers.com/)
+
+
+
+
+
+
 
 
 ## Data resources
@@ -1717,69 +1809,3 @@ Kaggle is a company that offers data science competitions, and they often have v
 * [rOpenSci](http://ropensci.org/packages/index.html)
 * [Facebook](https://developers.facebook.com/) and [RFacebook](http://cran.r-project.org/web/packages/Rfacebook/)
 * [Google maps](https://developers.google.com/maps/) and [RGoogleMaps](http://cran.r-project.org/web/packages/RgoogleMaps/index.html)
-
-## Further resources
-- [Data Wrangling with {dplyr} and {tidyr} Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf)
-- Andrew Jaffe's [lecture notes](http://www.biostat.jhsph.edu/~ajaffe/lec_winterR/Lecture%202.pdf)
-# Step 3 Exploratory data analysis (EDA)
-## {base}
-### Simple summaries of data
-#### One dimension
-##### Five Number Summary
-```{r}
-summary(pollution$pm25)
-```
-##### Boxplot
-```{r}
-boxplot(pollution$pm25, col = "blue")
-```
-##### Histogram
-```{r}
-hist(pollution$pm25, col = "green", breaks = 100)
-rug(pollution$pm25)
-```
-`rug()` plots all of the points in your dataset along underneath the histogram  
-`breaks=100` the number of bars in the histogram
-##### Overlaying Features
-```{r}
-abline(h = 12)
-abline(v = median(pollution$pm25), col = "magenta", lwd = 4)
-```
-`h=` horizontal line  
-`v=` vertical line  
-`lwd=`line width
-##### Barplot
-```{r}
-barplot(table(pollution$region), col = "wheat", main = "Number of Counties in Each Region")
-```
-#### Two dimensions
-##### Multiple Boxplots
-```{r}
-boxplot(pm25 ~ region, data = pollution, col = "red")
-```
-`pm25 ~ region` `pm25` is a numeric vector of data values to be split into groups according to the grouping variable `region` (usually a factor)
-##### Multiple Histograms
-```{r}
-par(mfrow = c(2, 1), mar = c(4, 4, 2, 1))
-hist(subset(pollution, region == "east")$pm25, col = "green")
-hist(subset(pollution, region == "west")$pm25, col = "green")
-```
-`par()` set or query graphical parameters  
-`mar=` A numerical vector of the form c(bottom, left, top, right) which gives the number of lines of margin to be specified on the four sides of the plot.  
-`mfrow=` A vector of the form c(nr, nc). Subsequent figures will be drawn in an nr-by-nc array on the device by columns (mfcol), or rows (mfrow), respectively.
-##### Scatterplot
-```{r}
-with(pollution, plot(latitude, pm25, col = region))
-abline(h = 12, lwd = 2, lty = 2)
-```
-`col=region` break out color groups by region  
-`lty` line type
-##### Multiple Scatterplots
-```{r}
-par(mfrow = c(1, 2), mar = c(5, 4, 2, 1))
-with(subset(pollution, region == "west"), plot(latitude, pm25, main = "West"))
-with(subset(pollution, region == "east"), plot(latitude, pm25, main = "East"))
-```
-## Further resources
-- [R Graph Gallery](https://www.r-graph-gallery.com/)
-- [R Bloggers](https://www.r-bloggers.com/)
