@@ -1744,6 +1744,103 @@ ftable(xt)
 object.size(fakeData)
 print(object.size(fakeData),units="Mb")
 ```
+## 3.2 Plotting
+### 3.2.1 {base}
+#### 3.2.1.1 Parameters
+Many base plotting functions share a set of parameters. Here are a few key ones:
+- `pch`: the plotting symbol (default is open circle)
+- `lty`: the line type (default is solid line), can be dashed, dotted, etc.
+- `lwd`: the line width, specified as an integer multiple
+- `col`: the plotting color, specified as a number, string, or hex code; the colors() function gives you a vector of colors by name
+- `xlab`: character string for the x-axis label
+- `ylab`: character string for the y-axis label
+##### par(): specify global graphics parameters
+These parameters can be overridden when specified as arguments to specific plotting functions.
+- `las`: the orientation of the axis labels on the plot
+- `bg`: the background color
+- `mar`: the margin size
+- `oma`: the outer margin size (default is 0 for all sides)
+- `mfrow`: number of plots per row, column (plots are filled row-wise)
+- `mfcol`: number of plots per row, column (plots are filled column-wise)
+#### 3.2.1.2 Plotting functions
+- `plot`: make a scatterplot, or other type of plot depending on the class of the object being plotted
+- `lines`: add lines to a plot, given a vector x values and a corresponding vector of y values (or a 2-column matrix); this function just connects the dots
+- `points`: add points to a plot
+- `text`: add text labels to a plot using specified x, y coordinates
+- `title`: add annotations to x, y axis labels, title, subtitle, outer margin
+- `mtext`: add arbitrary text to the margins (inner or outer) of the plot
+- `axis`: adding axis ticks/labels
+##### With annotations
+```{r}
+library(datasets)
+with(airquality, plot(Wind, Ozone))
+title(main = "Ozone and Wind in New York City")  # Add a title
+```
+a subset of blue points corresponding to the data points in the month of May
+```{r}
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City"))
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
+```
+
+```{r}
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City", type = "n"))
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
+with(subset(airquality, Month != 5), points(Wind, Ozone, col = "red"))
+legend("topright", pch = 1, col = c("blue", "red"), legend = c("May", "Other Months"))
+```
+`type="n"`: sets up the plot and initializes the graphics device but it doesn't actually plot anything.
+##### With regression line
+```{r}
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York City", pch = 20))
+model <- lm(Ozone ~ Wind, airquality)
+abline(model, lwd = 2)
+```
+##### Multiple plots
+```{r}
+par(mfrow = c(1, 2))
+with(airquality, {
+	plot(Wind, Ozone, main = "Ozone and Wind")
+	plot(Solar.R, Ozone, main = "Ozone and Solar Radiation")
+})
+```
+
+```{r}
+par(mfrow = c(1, 3), mar = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
+with(airquality, {
+	plot(Wind, Ozone, main = "Ozone and Wind")
+	plot(Solar.R, Ozone, main = "Ozone and Solar Radiation")
+	plot(Temp, Ozone, main = "Ozone and Temperature")
+	mtext("Ozone and Weather in New York City", outer = TRUE)
+})
+```
+#### 3.2.1.3 Create plots and send it to file device
+1. Explicitly launch a graphics device
+2. Call a plotting function to make a plot (Note: if you are using a file device, no plot will appear on the screen)
+3. Annotate plot if necessary
+4. Explicitly close graphics device with dev.off() (this is very important!)
+```{r}
+pdf(file = "myplot.pdf")  ## Open PDF device; create 'myplot.pdf' in my working directory
+## Create plot and send to a file (no plot appears on screen)
+with(faithful, plot(eruptions, waiting))  
+title(main = "Old Faithful Geyser data")  ## Annotate plot; still nothing on screen
+dev.off()  ## Close the PDF file device
+## Now you can view the file 'myplot.pdf' on your computer
+```
+#### 3.2.1.4 Open Multiple Graphics Devices
+It is possible to open multiple graphics devices (screen, file, or both), for example when viewing multiple plots at once. Plotting can only occur on one graphics device at a time. The currently active graphics device can be found by calling `dev.cur()`. Every open graphics device is assigned an integer >= 2. You can change the active graphics device with `dev.set(<integer>)` where `<integer>` is the number associated with the graphics device you want to switch to.
+#### 3.2.1.5 Copy Plots
+Copying a plot to another device can be useful because some plots require a lot of code and it can be a pain to type all that in again for a different device.  
+`dev.copy`: copy a plot from one device to another  
+`dev.copy2pdf`: specifically copy a plot to a PDF file  
+NOTE: Copying a plot is not an exact operation, so the result may not be identical to the original.
+```{r}
+library(datasets)
+with(faithful, plot(eruptions, waiting))  ## Create plot on screen device
+title(main = "Old Faithful Geyser data")  ## Add a main title
+dev.copy(png, file = "geyserplot.png")  ## Copy my plot to a PNG file
+dev.off()  ## Don't forget to close the PNG device!
+```
+
 ## 3.2 Model
 simple linear model
 ```{r}
