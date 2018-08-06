@@ -1842,8 +1842,12 @@ dev.off()  ## Don't forget to close the PNG device!
 ```
 #### 3.2.1.6 Summary
 - Vector formats (pdf,svg) are good for line drawings and plots with solid colors using a modest number of points
+  - pdf: useful for line-type graphics and papers. Resizes well, portable, not efficient if a plot has many objects/points.
+  - svg: XML-based, scalable vector graphics. Supports animation and interactivity and is useful for web-based plots.
 - Bitmap formats (png,jpeg,tiff,bmp) are good for plots with a large number of points, natural scenes or web-based plots
-  - drawings or images with solid colors. It
+  - png (Portable Network Graphics): good for line drawings or images with solid colors. Uses lossless compression (like the old GIF format), most web browsers can read this format natively. Is good for plots with many points, but does not resize well.
+  - jpeg: good for photographs or natural scenes. Use lossy compression, so good for plots with many points. Don't resize well, but can be read by almost any computer and any web browser. Not great for line drawings.
+
 ## 3.2 Model
 simple linear model
 ```{r}
