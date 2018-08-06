@@ -1840,7 +1840,9 @@ title(main = "Old Faithful Geyser data")  ## Add a main title
 dev.copy(png, file = "geyserplot.png")  ## Copy my plot to a PNG file
 dev.off()  ## Don't forget to close the PNG device!
 ```
-
+#### 3.2.1.6 Summary
+- Vector formats (pdf,svg) are good for line drawings and plots with solid colors using a modest number of points
+- Bitmap formats (png,jpeg,tiff,bmp) are good for plots with a large number of points, natural scenes or web-based plots
 ## 3.2 Model
 simple linear model
 ```{r}
