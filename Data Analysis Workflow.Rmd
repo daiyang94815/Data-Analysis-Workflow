@@ -1843,6 +1843,7 @@ dev.off()  ## Don't forget to close the PNG device!
 #### 3.2.1.6 Summary
 - Vector formats (pdf,svg) are good for line drawings and plots with solid colors using a modest number of points
 - Bitmap formats (png,jpeg,tiff,bmp) are good for plots with a large number of points, natural scenes or web-based plots
+  - drawings or images with solid colors. It
 ## 3.2 Model
 simple linear model
 ```{r}
