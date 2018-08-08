@@ -2012,8 +2012,6 @@ plot(svd1$v[,1],xlab="Column",ylab="First right singular vector",pch=19)
 plot(svd1$d,xlab="Column",ylab="Singular value",pch=19)
 plot(svd1$d^2/sum(svd1$d^2),xlab="Column",ylab="Prop. of variance explained",pch=19)
 ```
-
-
 ### Impute missing data
 #### {impute}
 - `impute.knn()`: uses the k nearest neighbors to calculate a value to use in place of the missing data
@@ -2036,8 +2034,6 @@ coef(sim1_mod)
 ## 3. Further resources
 - [R Graph Gallery](https://www.r-graph-gallery.com/)
 - [R Bloggers](https://www.r-bloggers.com/)
-
-
 
 
 
