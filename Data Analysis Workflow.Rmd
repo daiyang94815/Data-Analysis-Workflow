@@ -2035,6 +2035,14 @@ plot(svd2$v[,1],pch=19)
   - P(A) = P(A|B) \* P(B) + P(A|~B) \* P(~B)
   - P(B|A) = P(A|B) \* P(B) / ( P(A|B) \* P(B) + P(A|~B) \* P(~B) )
 
+### 4.1.1 Diagnostic tests
+- Sensitivity: the probability that the test is positive given that the subject actually has the disease, P(+ | D)
+- Specificity: the probability that the test is negative given that the subject does not have the disease, P(??? | ~D)
+- Positive predictive value: the probability that the subject has the disease given that the test is positive, P(D | +)
+- Negative predictive value: the probability that the subject does not have the disease given that the test is negative, P(~D | ???)
+- Prevalence of the disease: the marginal probability of disease, P(D)
+- Diagnostic likelihood ratio of a positive test (DLR~-~)
+
 
 
 
