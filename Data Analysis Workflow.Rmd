@@ -2041,8 +2041,8 @@ plot(svd2$v[,1],pch=19)
 - **Positive predictive value**: the probability that the subject has the disease given that the test is positive, P(D|+)
 - **Negative predictive value**: the probability that the subject does not have the disease given that the test is negative, P(~D|-)
 - **Prevalence of the disease**: the marginal probability of disease, P(D)
-- **Diagnostic likelihood ratio of a positive test (DLR+)**: P(+|D)/P(+|~D) or sensitivity/(1???specificity)
-- **Diagnostic likelihood ratio of a negative test (DLR-)**: P(-|D)/P(-|~D) or (1???sensitivity)/specificity
+- **Diagnostic likelihood ratio of a positive test (DLR+)**: P(+|D)/P(+|~D) or sensitivity/(1-specificity)
+- **Diagnostic likelihood ratio of a negative test (DLR-)**: P(-|D)/P(-|~D) or (1-sensitivity)/specificity
  - post-test odds of D = DLR * pre-test odds of D
  - hypothesis of disease is supported (DLR+/-) times that of the hypothesis of no disease given the (positive/negative) test result
 
@@ -2057,13 +2057,29 @@ Suppose a friend has 8 children, 7 of which are girls and none are twins. If eac
 pbinom(6, size = 8, prob = .5, lower.tail = FALSE)
 ```
 ### 4.3.2 Normal distribution
-- If X~N(??,??^2), then Z=(X-??)/?? is standard normal
-- If Z is standard normal, then X=??+??*Z~N(??,??^2)
-What is the 95th percentile of a N(??,??^2) distribution? 
+- If X~N(mu,sigma^2), then Z=(X-mu)/sigma is standard normal
+- If Z is standard normal, then X=mu+sigma*Z~N(mu,sigma^2)
+What is the 95th percentile of a N(mu,sigma^2) distribution? (The point x0 so that 
+P(X<=x0)=.95)
 ```{r}
 qnorm(.95, mean = mu, sd = sd)
 ```
-
+or
+```{r}
+x0=mu+sigma*z0
+```
+where z0 is the appropriate standard normal quantile (in this case 1.645)  
+  
+Assume that the number of daily ad clicks for a company is (approximately) normally distributed with a mean of 1020 and a standard deviation of 50. What's the probability of getting more than 1,160 clicks in a day?  
+It's not very likely, 1,160 is `r (1160 - 1020) / 50` standard deviations from the mean.
+```{r}
+pnorm(1160, mean = 1020, sd = 50, lower.tail = FALSE)
+pnorm(2.8, lower.tail = FALSE)
+```
+Assume that the number of daily ad clicks for a company is (approximately) normally distributed with a mean of 1020 and a standard deviation of 50. What number of daily ad clicks would represent the one where 75% of days have fewer clicks (assuming days are independent and identically distributed)?
+```{r}
+qnorm(0.75, mean = 1020, sd = 50)
+```
 
 
 
