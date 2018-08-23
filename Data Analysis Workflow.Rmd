@@ -1986,8 +1986,8 @@ barplot(pca.var.per, main="Scree Plot", xlab="Principal Component", ylab="Percen
 - `svd()` returns:
   - `v`: the `rotation` that `prcomp()` returns, a matrix of loading scores
   - `u`: similar to the `x` that `prcomp()` returns. In other words, sum(`rotation` * original data), but compressed to the unit vector. You can spread it out by multiplying by `d`
-  - `d`: similar to the `sdev` that `prcomp()` returns (and thus related to the eigen values), but not scaled by sample size in an unbiased way (ie. 1/(n-1)). For `prcomp()`, `sdev` = sqrt(var) = sqrt(ss(fit)/(n-1))
-
+  - `d`: similar to the `sdev` that `prcomp()` returns (and thus related to the eigen values), but not scaled by sample size in an unbiased way (ie. 1/(n-1)). For `prcomp()`, `sdev` = sqrt(var) = sqrt(ss(fit)/(n-1))  
+  
 The first column of V is the first principal component of the matrix.
 ```{r}
 hh <- hclust(dist(dataMatrix))
@@ -2022,7 +2022,6 @@ dataMatrix2 <- impute.knn(dataMatrix2)$data
 svd2 <- svd(scale(dataMatrix2))
 plot(svd2$v[,1],pch=19)
 ```
-
 ### Furthur resources
 - [A Tutorial on Principal Component Analysis](https://arxiv.org/pdf/1404.1100.pdf)
 ## 3.2 Model
@@ -2031,7 +2030,7 @@ simple linear model
 sim1_mod <- lm(y ~ x, data = sim1)
 coef(sim1_mod)
 ```
-## 3. Further resources
+## 3.5 Further resources
 - [R Graph Gallery](https://www.r-graph-gallery.com/)
 - [R Bloggers](https://www.r-bloggers.com/)
 
