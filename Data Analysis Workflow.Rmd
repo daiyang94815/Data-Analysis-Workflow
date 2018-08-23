@@ -2024,16 +2024,16 @@ plot(svd2$v[,1],pch=19)
 ```
 ### Furthur resources
 - [A Tutorial on Principal Component Analysis](https://arxiv.org/pdf/1404.1100.pdf)
-## 3.2 Model
-simple linear model
-```{r}
-sim1_mod <- lm(y ~ x, data = sim1)
-coef(sim1_mod)
-```
 ## 3.5 Further resources
 - [R Graph Gallery](https://www.r-graph-gallery.com/)
 - [R Bloggers](https://www.r-bloggers.com/)
-
+# 4. Step 4 Statistical Inference
+## 4.1 Conditional Probability
+- P(A|B) = P(A & B)/ P(B) . P(A|B) is the probability that BOTH A and B occur divided by the probability that B occurs.
+- Bayes' Rule:
+  - P(B|A) = P(B&A)/P(A) = P(A|B) * P(B)/P(A)
+  - P(A) = P(A|B) \* P(B) + P(A|~B) \* P(~B)
+  - P(B|A) = P(A|B) \* P(B) / ( P(A|B) \* P(B) + P(A|~B) \* P(~B) )
 
 
 
