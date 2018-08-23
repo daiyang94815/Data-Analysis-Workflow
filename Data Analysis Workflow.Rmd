@@ -2029,19 +2029,40 @@ plot(svd2$v[,1],pch=19)
 - [R Bloggers](https://www.r-bloggers.com/)
 # 4. Step 4 Statistical Inference
 ## 4.1 Conditional Probability
-- P(A|B) = P(A & B)/ P(B) . P(A|B) is the probability that BOTH A and B occur divided by the probability that B occurs.
+- P(A|B) = P(A & B)/ P(B). P(A|B) is the probability that BOTH A and B occur divided by the probability that B occurs.
 - Bayes' Rule:
   - P(B|A) = P(B&A)/P(A) = P(A|B) * P(B)/P(A)
   - P(A) = P(A|B) \* P(B) + P(A|~B) \* P(~B)
   - P(B|A) = P(A|B) \* P(B) / ( P(A|B) \* P(B) + P(A|~B) \* P(~B) )
 
 ### 4.1.1 Diagnostic tests
-- Sensitivity: the probability that the test is positive given that the subject actually has the disease, P(+|D)
-- Specificity: the probability that the test is negative given that the subject does not have the disease, P(-|~D)
-- Positive predictive value: the probability that the subject has the disease given that the test is positive, P(D|+)
-- Negative predictive value: the probability that the subject does not have the disease given that the test is negative, P(~D|-)
-- Prevalence of the disease: the marginal probability of disease, P(D)
-- Diagnostic likelihood ratio of a positive test (DLR~-~)~2~
+- **Sensitivity**: the probability that the test is positive given that the subject actually has the disease, P(+|D)
+- **Specificity**: the probability that the test is negative given that the subject does not have the disease, P(-|~D)
+- **Positive predictive value**: the probability that the subject has the disease given that the test is positive, P(D|+)
+- **Negative predictive value**: the probability that the subject does not have the disease given that the test is negative, P(~D|-)
+- **Prevalence of the disease**: the marginal probability of disease, P(D)
+- **Diagnostic likelihood ratio of a positive test (DLR+)**: P(+|D)/P(+|~D) or sensitivity/(1???specificity)
+- **Diagnostic likelihood ratio of a negative test (DLR-)**: P(-|D)/P(-|~D) or (1???sensitivity)/specificity
+ - post-test odds of D = DLR * pre-test odds of D
+ - hypothesis of disease is supported (DLR+/-) times that of the hypothesis of no disease given the (positive/negative) test result
+
+## 4.2 Variances
+- The sample variance estimates the population variance
+- The distribution of the sample variance is centered at what its estimating. It gets more concentrated around the population variance with larger sample sizes
+- The variance of the sample mean is the population variance divided by n. The square root is the standard error.
+## 4.3 Distributions
+### 4.3.1 Binomial distrubtion
+Suppose a friend has 8 children, 7 of which are girls and none are twins. If each gender has an independent 50% probability for each birth, what's the probability of getting 7 or more girls out of 8 births?
+```{r}
+pbinom(6, size = 8, prob = .5, lower.tail = FALSE)
+```
+### 4.3.2 Normal distribution
+- If X~N(??,??^2), then Z=(X-??)/?? is standard normal
+- If Z is standard normal, then X=??+??*Z~N(??,??^2)
+What is the 95th percentile of a N(??,??^2) distribution? 
+```{r}
+qnorm(.95, mean = mu, sd = sd)
+```
 
 
 
