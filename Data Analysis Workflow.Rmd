@@ -2326,6 +2326,73 @@ sum(p.adjust(pValues, method = "BH") < 0.05)
 - [Statistical significance for genome-wide studies](http://www.pnas.org/content/100/16/9440.full)
 - [Introduction to multiple testing](http://ies.ed.gov/ncee/pubs/20084018/app_b.asp)
 
+## 4.9 Resampleing
+### 4.9.1 Bootstrap
+- Simulating complete data sets from the observed data with replacement
+- Calculate the statistic for each simulated data set
+- Use the simulated statistics to either define a confidence interval or take the standard deviation to calculate a standard error
+```{r}
+B <- 10000
+resamples <- matrix(sample(x,
+                           n * B,
+                           replace = TRUE),
+                    B, n)
+medians <- apply(resamples, 1, median)
+sd(medians)
+quantile(medians, c(.025, .975))
+```
+
+```{r}
+g = ggplot(data.frame(x = resampledMedians), aes(x = x)) 
+g = g + geom_density(size = 2, fill = "red")
+#g = g + geom_histogram(alpha = .20, binwidth=.3, colour = "black", fill = "blue", aes(y = ..density..)) 
+g = g + geom_vline(xintercept = median(x), size = 2)
+g
+```
+#### Notes
+- Better percentile bootstrap confidence intervals correct for bias
+  - bias-corrected and accelerated interval (BCA interval) provided in `{bootstrap}` package in R.
+- "An Introduction to the Bootstrap" by Efron and Tibshirani
+
+### 4.9.2 Permutation tests
+- Consider the null hypothesis that the distribution of the observations from each group is the same
+- Then, the group labels are irrelevant
+- Consider a data frome with count and spray. Permute the spray (group) labels
+- Recalculate the statistic 
+  - Mean difference in counts
+  - Geometric means
+  - T statistic
+- Calculate the percentage of simulations where the simulated statistic was more extreme (toward the alternative) than the observed
+```{r}
+subdata <- InsectSprays[InsectSprays$spray %in% c("B", "C"),]
+y <- subdata$count
+group <- as.character(subdata$spray)
+testStat <- function(w, g) mean(w[g == "B"]) - mean(w[g == "C"])
+observedStat <- testStat(y, group)
+permutations <- sapply(1 : 10000, function(i) testStat(y, sample(group)))
+observedStat
+mean(permutations > observedStat)
+```
+
+```{r}
+g = ggplot(data.frame(permutations = permutations),
+           aes(permutations))
+g = g + geom_histogram(fill = "lightblue", color = "black", binwidth = 1)
+g = g + geom_vline(xintercept = observedStat, size = 2)
+g
+```
+#### Variations on permutation testing
+Data type | Statistic | Test name 
+---|---|---|
+Ranks | rank sum | rank sum test
+Binary | hypergeometric prob | Fisher's exact test
+Raw data | | ordinary permutation test  
+
+
+
+
+
+
 ## Data resources
 ### Open Government Sites
 * United Nations [http://data.un.org/](http://data.un.org/)
