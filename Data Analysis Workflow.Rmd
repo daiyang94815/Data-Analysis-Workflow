@@ -2192,10 +2192,10 @@ t.test(g2, g1, paired = FALSE, var.equal = TRUE)$conf
 ## 4.5 Hypothesis testing
 Truth | Decide | Result |
 ---|---|---|
-$H_0$ | $H_0$ | Correctly accept null |
-$H_0$ | $H_a$ | Type I error |
-$H_a$ | $H_a$ | Correctly reject null |
-$H_a$ | $H_0$ | Type II error |
+H0 | H0 | Correctly accept null |
+H0 | Ha | Type I error |
+Ha | Ha | Correctly reject null |
+Ha | H0 | Type II error |
 ### 4.5.1 t test
 Suppose that in a sample of 16 overweight subjects with other risk factors for sleep disordered breathing at a sleep clinic, the mean RDI was 32 events/hour with a standard deviation of 10 events/hour.  
   
@@ -2271,7 +2271,9 @@ power.t.test(n = 16, delta = 2, sd=4, type = "one.sample",  alt = "one.sided")$p
 ```{r}
 power.t.test(power = .8, delta = 2, sd=4, type = "one.sample",  alt = "one.sided")$n
 ```
-So you need a sample of size 27, to have a power of 80% to detect an effect size as large as 0.5.
+So you need a sample of size 27, to have a power of 80% to detect an effect size as large as 0.5.  
+## 4.8 Multiple testing and correction
+### Type of errors
               | beta=0    | beta!=0     |  Hypotheses
 --------------|-----------|-------------|---------
 Claim beta=0  |      U    |      T      |  m-R
