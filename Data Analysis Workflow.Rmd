@@ -2058,7 +2058,8 @@ pbinom(6, size = 8, prob = .5, lower.tail = FALSE)
 ```
 ### 4.3.2 Normal distribution
 - If X~N(mu,sigma^2), then Z=(X-mu)/sigma is standard normal
-- If Z is standard normal, then X=mu+sigma*Z~N(mu,sigma^2)
+- If Z is standard normal, then X=mu+sigma*Z~N(mu,sigma^2)  
+  
 What is the 95th percentile of a N(mu,sigma^2) distribution? (The point x0 so that 
 P(X<=x0)=.95)
 ```{r}
@@ -2080,10 +2081,203 @@ Assume that the number of daily ad clicks for a company is (approximately) norma
 ```{r}
 qnorm(0.75, mean = 1020, sd = 50)
 ```
+### 4.3.3 Poisson distribution
+- Modeling count data
+- Modeling event-time or survival data
+- Modeling contingency tables
+- Approximating binomials when n is large and p is small 
+  
+The number of people that show up at a bus stop is Poisson with a mean of 2.5 per hour. If watching the bus stop for 4 hours, what is the probability that 3 or fewer people show up for the whole time?
+```{r}
+ppois(3, lambda = 2.5 * 4)
+```
+### 4.3.4 t/student's distribution
+- The reason for the t distribution is as follows. If we take x bar, subtract off the mean, and divide it by the estimated standard error for iid Gaussian data, it in fact is not Gaussian distributed. If we replaced s by sigma, it would be exactly standard normal. However, when we replace sigma by s, it no longer has a distribution as that of a standard normal. Instead, it has a t distribution.  
+- Assumes that the underlying data are iid Gaussian with the result that (xbar-mu)/(S/sqrt(n)) follows Gosset's t distribution with n???1 degrees of freedom.
+## 4.4 Asymptotics
+- Law of large numbers (LLN):
+  - averages of iid samples converge to the population means that they are estimating
+  - the sample mean, sample variance and sample standard deviation of iid random variables are consistent 
+    - An estimator is consistent if it converges to what you want to estimate. Typically, good estimators are consistent.
+- Central Limit Theorem (CLT):
+  - the distribution of averages of iid variables (properly normalized) becomes that of a standard normal as the sample size increases
+  - properly normalized:
+    - (Estimate-Mean of estimate)/Std. Err. of estimate
+    - (sample mean-mean of sample mean)/(sigma/sqrt(n))
+  - X(Estimate/sample mean) is approximately N(mu,sigma^2/n)
 
+### 4.4.1 Confidence intervals
+Quick CI for proportions
+```{r}
+phat+c(-1,1)/sqrt(n)
+```
+Your campaign advisor told you that in a random sample of 100 likely voters, 56 intent to vote for you. Can you relax? Do you have this race in the bag?  
+Quick CI
+```{r}
+.56+c(-1,1)/sqrt(100)
+```
+#### 4.4.1.1 Binomial interval 
+##### Wald intervel (CLT)
+```{r}
+.56 + c(-1, 1) * qnorm(.975) * sqrt(.56 * .44 / 100)
+```
+##### Exact intervel: guarantees 95% or higher coverage
+Do not rely on the CLT (regardless of the size N). A nice compliment to large sample procedures. They tend to have wider intervals. 
+```{r}
+binom.test(56, 100)$conf.int
+```
+##### Agresti/Coull interval
+A quick fix for small sample size binomial calculations: Add two successes and failures phat=(X+2)/(n+4). (It's a little conservative)
+```{r}
+phat <- (rbinom(1, prob = .5, size = 20)+2)/(n+4)
+phats + c(-1,1) * qnorm(.975) * sqrt(phats * (1 - phats) / n)
+```
+#### 4.4.1.2 Poisson interval
+A nuclear pump failed 5 times out of 94.32 days, give a 95% confidence interval for the failure rate per day?
+##### Wald intervel (CLT)
+```{r}
+x <- 5
+t <- 94.32
+lambda <- x/t
+round(lambda + c(-1, 1) * qnorm(0.975) * sqrt(lambda/t), 3)
+```
+##### Exact intervel
+```{r}
+poisson.test(x, T = 94.32)$conf
+```
+#### 4.4.1.3 T confidence intervals
+- The t interval technically assumes that the data are iid normal, though it is robust to this assumption
+- It works well whenever the distribution of the data is roughly symmetric and mound shaped
+- Paired observations are often analyzed using the t interval by taking differences
+- For large degrees of freedom, t quantiles become the same as standard normal quantiles; therefore this interval converges to the same interval as the CLT yielded
+- For skewed distributions, the spirit of the t interval assumptions are violated 
+  - Also, for skewed distributions, it doesn't make a lot of sense to center the interval at the mean
+  - In this case, consider taking logs or using a different summary like the median
+- For highly discrete data, like binary, other intervals are available
 
+##### Paired groups
+`data(sleep)` shows the increase in hours for 10 patients on two soporific drugs.  
+Manually construct the t CI:
+```{r}
+g1 <- sleep$extra[1:10]
+g2 <- sleep$extra[11:20]
+difference <- g2 - g1
+mn <- mean(difference)
+s <- sd(difference)
+n <- 10
 
+mn + c(-1, 1) * qt(0.975, n - 1) * s/sqrt(n)
+```
+R function:
+```{r}
+t.test(difference)
+t.test(g2, g1, paired = TRUE)
+t.test(extra ~ relevel(group, 2), paired = TRUE, data = sleep)
+```
+##### Independent groups
+assume the sleep data is not paired  
+Manually construct the t CI:
+```{r}
+n1 <- length(g1); n2 <- length(g2)
+sp <- sqrt( ((n1 - 1) * sd(x1)^2 + (n2-1) * sd(x2)^2) / (n1 + n2-2))
+md <- mean(g2) - mean(g1)
+semd <- sp * sqrt(1 / n1 + 1/n2)
 
+md + c(-1, 1) * qt(.975, n1 + n2 - 2) * semd
+```
+R function:
+```{r}
+t.test(g2, g1, paired = FALSE, var.equal = TRUE)$conf
+```
+## 4.5 Hypothesis testing
+Truth | Decide | Result |
+---|---|---|
+$H_0$ | $H_0$ | Correctly accept null |
+$H_0$ | $H_a$ | Type I error |
+$H_a$ | $H_a$ | Correctly reject null |
+$H_a$ | $H_0$ | Type II error |
+### 4.5.1 t test
+Suppose that in a sample of 16 overweight subjects with other risk factors for sleep disordered breathing at a sleep clinic, the mean RDI was 32 events/hour with a standard deviation of 10 events/hour.  
+  
+Manually construct the t test:  
+- The statistic (xbar-30)/(s/sqrt(n)) follows a T distribution with n-1 df under H0
+- One-sided test: H0: mu=30. Ha: mu>30
+```{r}
+(32-30)/(10/sqrt(16)) < qt(.95, 15)
+```
+so fail to reject Ho  
+  
+- Two-sided t test: H0: mu=30. Ha: mu!=30
+```{r}
+(32-30)/(10/sqrt(16)) < qt(.975, 15)
+```
+If you fail to reject the one-sided test, you know that you will fail to reject the two-sided
+  
+R function:
+```{r}
+t.test(father.son$sheight - father.son$fheight)
+```
+
+```{r}
+t.test(gain ~ Diet, paired = FALSE, 
+       var.equal = TRUE, data = wideCW14)
+```
+### 4.5.2 Exact binomial test
+```{r}
+pbinom( 6, size = 8, p = .5, lower.tail = FALSE) < .05
+```
+so we'll reject H0 if we see at least 7 girls in 8 children
+## 4.6 P value
+The probability under the null hypothesis of obtaining evidence as extreme or more extreme than that obtained.  
+  
+Suppos that you get a T statistic of 2.5 for 15 df testing H0: mu=mu0, Ha: mu>mu0. What's the probability of getting a T statistic as large as 2.5?
+```{r}
+pt(2.5, 15, lower.tail = FALSE)
+```
+
+```{r}
+pbinom(6, size = 8, prob = .5, lower.tail = FALSE)
+```
+Poisson example: Suppose that a hospital has an infection rate of 10 infections per 100 person/days at risk (rate of 0.1) during the last monitoring period. H0: lambda=0.05, Ha: lambda>0.05.
+```{r}
+ppois(9, 5, lower.tail = FALSE)
+```
+## 4.7 Power
+- The probability of rejecting the null hypothesis when it is false. It comes more into play for null results, than it does for non null results. And the way the power gets used most often, as at the time of designing the study. You want to design the study, so that you have a reasonable chance of detecting the alternative hypothesis, if the alternative hypothesis is true.  
+- Power=1-beta(type 2 error/fail to reject the null hypothesis when it's false)  
+  
+Ho: xbar~N(mu0,sigma^2/n)
+Ha: xbar~N(mua,sigma^2/n)
+  
+Manually construct power
+```{r}
+alpha = 0.05
+mu0 = 30; mua = 32; sigma = 4; n = 16
+z = qnorm(1 - alpha)
+power <- pnorm(mu0 + z * sigma / sqrt(n), mean = mua, sd = sigma / sqrt(n), 
+      lower.tail = FALSE)
+```
+There's a 64% probability of detecting a mean as large as 32 or larger if we conduct this experiment. 
+  
+- (mua-mu0)/sigma: effect size, the difference in the means in standard deviation units.  
+- power only depends on effectSize * sqrt(n)
+  
+R function  
+`power.t.test()`: Omit one of the arguments and it solves for it 
+```{r}
+power.t.test(n = 16, delta = 2, sd=4, type = "one.sample",  alt = "one.sided")$power
+```
+- `delta=` the difference in the means
+```{r}
+power.t.test(power = .8, delta = 2, sd=4, type = "one.sample",  alt = "one.sided")$n
+```
+So you need a sample of size 27, to have a power of 80% to detect an effect size as large as 0.5.
+              | beta=0    | beta!=0     |  Hypotheses
+--------------|-----------|-------------|---------
+Claim beta=0  |      U    |      T      |  m-R
+Claim beta!=0 |      V    |      S      |  R
+    Claims    |     m0    |      m-m0   |  m
+    
 ## Data resources
 ### Open Government Sites
 * United Nations [http://data.un.org/](http://data.un.org/)
