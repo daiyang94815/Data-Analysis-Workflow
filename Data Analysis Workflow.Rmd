@@ -2273,12 +2273,50 @@ power.t.test(power = .8, delta = 2, sd=4, type = "one.sample",  alt = "one.sided
 ```
 So you need a sample of size 27, to have a power of 80% to detect an effect size as large as 0.5.  
 ## 4.8 Multiple testing and correction
-### Type of errors
+### 4.8.1 Type of errors
 claim/truth   | beta=0 | beta!=0 | Hypotheses |
 --------------|--------|---------|------------|
 Claim beta=0  | U | T | m-R |
 Claim beta!=0 | V | S | R |
-Claims        | m0| m-m0 | m |
+Claims        | m0| m-m0 | m |  
+
+**Type I error or false positive (V)** Say that the parameter does not equal zero when it does.  
+**Type II error or false negative (T)** Say that the parameter equals zero when it doesn't.
+### 4.8.2 Error rates
+- **False positive rate**: The rate at which false results (beta=0) are called significant: E(V/m0)
+- **Family wise error rate (FWER)**: The probability of at least one false positive P(V>=1)
+- **False discovery rate (FDR)**: The rate at which claims of significance are false: E(V/R)
+### 4.8.3 Controll the error rates
+#### Controll the false positive rate
+If P-values are correctly calculated, calling all P<alpha significant will control the false positive rate at level alpha on average.
+#### Controll the family-wise error rate (FWER)
+[Bonferroni correction](http://en.wikipedia.org/wiki/Bonferroni_correction)  
+- Suppose you do m tests, You want to control FWER at level alpha so Pr(V>=1)<alpha
+- Calculate P-values normally
+- Set alpha_fwer=alpha/m
+- Call all P-values less than alpha_fwer significant  
+**Pros**: Easy to calculate, conservative  
+**Cons**: May be very conservative  
+#### Controlling the false discovery rate (FDR)
+This is the most popular correction when performing lots of tests say in genomics, imaging, astronomy, or other signal-processing disciplines.  
+[Benjamini-Hochberg procedure](https://en.wikipedia.org/wiki/False_discovery_rate)  
+- Suppose you do m tests, You want to control FDR at level alpha so E(V/R)<alpha
+- Calculate P-values normally
+- Order the P-values from smallest to largest P1,...,Pm
+- Call any Pi<=alpha*i/m significant  
+**Pros**: Still pretty easy to calculate, less conservative (maybe much less)  
+**Cons**: Allows for more false positives, may behave strangely under dependence  
+#### Adjusted P-values
+They are not p-values anymore. But they can be used directly without adjusting alpha.
+```{r}
+# Controls FWER
+sum(p.adjust(pValues, method = "bonferroni") < 0.05)
+```
+
+```{r}
+# Controls FDR
+sum(p.adjust(pValues, method = "BH") < 0.05)
+```
 
 ## Data resources
 ### Open Government Sites
