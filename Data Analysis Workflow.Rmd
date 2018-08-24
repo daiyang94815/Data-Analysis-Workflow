@@ -28,7 +28,7 @@ rewrite the names of the columns to remove any spaces
 names(ozone) <- make.names(names(ozone))
 ```
 ## {ggplot2}
-I’ve coloured the models by `-dist`: this is an easy way to make sure that the best models (i.e. the ones with the smallest distance) get the brighest colours.
+I've coloured the models by `-dist`: this is an easy way to make sure that the best models (i.e. the ones with the smallest distance) get the brighest colours.
 ```{r}
 ggplot(sim1, aes(x, y)) + 
   geom_point(size = 2, colour = "grey30") + 
@@ -789,7 +789,7 @@ sentences %>%
   head(5) %>% 
   str_split(" ")
 ```
-Because each component might contain a different number of pieces, this returns a list. If you’re working with a length-1 vector, the easiest thing is to just extract the first element of the list:
+Because each component might contain a different number of pieces, this returns a list. If you're working with a length-1 vector, the easiest thing is to just extract the first element of the list:
 ```{r}
 "a|b|c|d" %>% 
   str_split("\\|") %>% 
@@ -852,7 +852,7 @@ takes `start` and `end` arguments which give the (inclusive) position of the sub
 ```{r}
 str_sub("a", 1, 5)
 ```
-won’t fail if the string is too short: it will just return as much as possible
+won't fail if the string is too short: it will just return as much as possible
 ```{r}
 str_sub(x, 1, 1) <- str_to_lower(str_sub(x, 1, 1))
 x
@@ -875,7 +875,7 @@ str_c("x", "y", sep = ", ")
 str_c("prefix-", c("a", "b", "c"), "-suffix")
 #> [1] "prefix-a-suffix" "prefix-b-suffix" "prefix-c-suffix"
 ```
-Use the `sep` argument to control how they’re separated
+Use the `sep` argument to control how they're separated
 ```{r}
 str_c(c("x", "y", "z"), collapse = ", ")
 #> [1] "x, y, z"
@@ -1128,7 +1128,7 @@ sentences %>%
 #### 2.2.1.13 Other types of pattern
 ##### {base}
 ###### regex()
-When you use a pattern that’s a string, it’s automatically wrapped into a call to `regex()`
+When you use a pattern that's a string, it's automatically wrapped into a call to `regex()`
 ```{r}
 bananas <- c("banana", "Banana", "BANANA")
 str_view(bananas, regex("banana", ignore_case = TRUE))
@@ -1154,7 +1154,7 @@ phone <- regex("
 
 str_match("514-791-8141", phone)
 ```
-`comments = TRUE` allows you to use comments and white space to make complex regular expressions more understandable. Spaces are ignored, as is everything after `#`. To match a literal space, you’ll need to escape it: `"\\ "`.
+`comments = TRUE` allows you to use comments and white space to make complex regular expressions more understandable. Spaces are ignored, as is everything after `#`. To match a literal space, you'll need to escape it: `"\\ "`.
 `dotall = TRUE` allows `.` to match everything, including `\n`.
 ###### fixed()
 matches exactly the specified sequence of bytes. It ignores all special regular expressions and operates at a very low level. This allows you to avoid complex escaping and can be much faster than regular expressions.
@@ -1220,7 +1220,7 @@ If you want a warning, you can use `readr::parse_factor()`
 ```{r}
 y2 <- parse_factor(x2, levels = month_levels)
 ```
-Sometimes you’d prefer that the order of the levels match the order of the first appearance in the data. You can do that when creating the factor by setting levels to `unique(x)`, or after the fact, with `forcats::fct_inorder()`:
+Sometimes you'd prefer that the order of the levels match the order of the first appearance in the data. You can do that when creating the factor by setting levels to `unique(x)`, or after the fact, with `forcats::fct_inorder()`:
 ```{r}
 f1 <- factor(x1, levels = unique(x1))
 f2 <- x1 %>% factor() %>% fct_inorder()
@@ -1237,7 +1237,7 @@ If you ever need to access the set of valid levels directly, you can do so with 
 ```{r}
 levels(f2)
 ```
-When factors are stored in a tibble, you can’t see their levels so easily. One way to see them is with `count()`:
+When factors are stored in a tibble, you can't see their levels so easily. One way to see them is with `count()`:
 ```{r}
 gss_cat %>%
   count(race)
@@ -1247,7 +1247,7 @@ Or with a bar chart:
 ggplot(gss_cat, aes(race)) +
   geom_bar()
 ```
-By default, ggplot2 will drop levels that don’t have any values. You can force them to display with:
+By default, ggplot2 will drop levels that don't have any values. You can force them to display with:
 ```{r}
 ggplot(gss_cat, aes(race)) +
   geom_bar() +
@@ -1274,7 +1274,7 @@ relig_summary %>%
 ```
 - `f`, the factor whose levels you want to modify.
 - `x`, a numeric vector that you want to use to reorder the levels.
-- Optionally, `fun`, a function that’s used if there are multiple values of `x` for each value of `f`. The default value is `median`.
+- Optionally, `fun`, a function that's used if there are multiple values of `x` for each value of `f`. The default value is `median`.
 ###### fct_relevel()
 takes a factor, `f`, and then any number of levels that you want to move to the front of the line.
 ```{r}
@@ -1298,7 +1298,7 @@ ggplot(by_age, aes(age, prop, colour = fct_reorder2(marital, age, prop))) +
   labs(colour = "marital")
 ```
 ###### fct_infreq()
-order levels in increasing frequency: this is the simplest type of reordering because it doesn’t need any extra variables. You may want to combine with `fct_rev()`
+order levels in increasing frequency: this is the simplest type of reordering because it doesn't need any extra variables. You may want to combine with `fct_rev()`
 ```{r}
 gss_cat %>%
   mutate(marital = marital %>% fct_infreq() %>% fct_rev()) %>%
@@ -1437,7 +1437,7 @@ flights_dt %>%
 as_datetime(today())
 as_date(now())
 ```
-Sometimes you’ll get date/times as numeric offsets from the “Unix Epoch”, 1970-01-01. If the offset is in seconds, use as_datetime(); if it’s in days, use as_date().
+Sometimes you'll get date/times as numeric offsets from the "Unix Epoch", 1970-01-01. If the offset is in seconds, use as_datetime(); if it's in days, use as_date().
 ```{r}
 as_datetime(60 * 60 * 10)
 #> [1] "1970-01-01 10:00:00 UTC"
@@ -1531,7 +1531,7 @@ tomorrow <- today() + ddays(1)
 last_year <- today() - dyears(1)
 ```
 ###### Periods
-Periods are time spans but don’t have a fixed length in seconds, instead they work with “human” times, like days and months. That allows them work in a more intuitive way:
+Periods are time spans but don't have a fixed length in seconds, instead they work with "human" times, like days and months. That allows them work in a more intuitive way:
 ```{r}
 one_pm
 #> [1] "2016-03-12 13:00:00 EST"
@@ -2093,7 +2093,7 @@ ppois(3, lambda = 2.5 * 4)
 ```
 ### 4.3.4 t/student's distribution
 - The reason for the t distribution is as follows. If we take x bar, subtract off the mean, and divide it by the estimated standard error for iid Gaussian data, it in fact is not Gaussian distributed. If we replaced s by sigma, it would be exactly standard normal. However, when we replace sigma by s, it no longer has a distribution as that of a standard normal. Instead, it has a t distribution.  
-- Assumes that the underlying data are iid Gaussian with the result that (xbar-mu)/(S/sqrt(n)) follows Gosset's t distribution with n???1 degrees of freedom.
+- Assumes that the underlying data are iid Gaussian with the result that (xbar-mu)/(S/sqrt(n)) follows Gosset's t distribution with n-1 degrees of freedom.
 ## 4.4 Asymptotics
 - Law of large numbers (LLN):
   - averages of iid samples converge to the population means that they are estimating
@@ -2387,9 +2387,6 @@ Data type | Statistic | Test name
 Ranks | rank sum | rank sum test
 Binary | hypergeometric prob | Fisher's exact test
 Raw data | | ordinary permutation test  
-
-
-
 
 
 
