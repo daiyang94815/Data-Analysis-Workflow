@@ -2274,11 +2274,11 @@ power.t.test(power = .8, delta = 2, sd=4, type = "one.sample",  alt = "one.sided
 So you need a sample of size 27, to have a power of 80% to detect an effect size as large as 0.5.  
 ## 4.8 Multiple testing and correction
 ### Type of errors
-              | beta=0    | beta!=0     |  Hypotheses
---------------|-----------|-------------|---------
-Claim beta=0  |      U    |      T      |  m-R
-Claim beta!=0 |      V    |      S      |  R
-    Claims    |     m0    |      m-m0   |  m
+              | beta=0    | beta!=0     |  Hypotheses|
+--------------|-----------|-------------|------------|
+Claim beta=0  |      U    |      T      |  m-R       |
+Claim beta!=0 |      V    |      S      |  R         |
+    Claims    |     m0    |      m-m0   |  m         |
     
 ## Data resources
 ### Open Government Sites
