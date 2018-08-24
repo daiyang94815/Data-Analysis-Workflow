@@ -2294,7 +2294,8 @@ If P-values are correctly calculated, calling all P<alpha significant will contr
 - Suppose you do m tests, You want to control FWER at level alpha so Pr(V>=1)<alpha
 - Calculate P-values normally
 - Set alpha_fwer=alpha/m
-- Call all P-values less than alpha_fwer significant  
+- Call all P-values less than alpha_fwer significant 
+  
 **Pros**: Easy to calculate, conservative  
 **Cons**: May be very conservative  
 #### Controlling the false discovery rate (FDR)
@@ -2304,6 +2305,7 @@ This is the most popular correction when performing lots of tests say in genomic
 - Calculate P-values normally
 - Order the P-values from smallest to largest P1,...,Pm
 - Call any Pi<=alpha*i/m significant  
+  
 **Pros**: Still pretty easy to calculate, less conservative (maybe much less)  
 **Cons**: Allows for more false positives, may behave strangely under dependence  
 #### Adjusted P-values
@@ -2317,6 +2319,12 @@ sum(p.adjust(pValues, method = "bonferroni") < 0.05)
 # Controls FDR
 sum(p.adjust(pValues, method = "BH") < 0.05)
 ```
+### 4.8.4 Notes and resources
+- If there is strong dependence between tests there may be problems 
+  - Consider method="BY"
+- [Multiple testing procedures with applications to genomics](http://www.amazon.com/Multiple-Procedures-Applications-Genomics-Statistics/dp/0387493166/ref=sr_1_2/102-3292576-129059?ie=UTF8&s=books&qid=1187394873&sr=1-2)
+- [Statistical significance for genome-wide studies](http://www.pnas.org/content/100/16/9440.full)
+- [Introduction to multiple testing](http://ies.ed.gov/ncee/pubs/20084018/app_b.asp)
 
 ## Data resources
 ### Open Government Sites
