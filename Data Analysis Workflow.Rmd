@@ -2387,9 +2387,212 @@ Data type | Statistic | Test name
 Ranks | rank sum | rank sum test
 Binary | hypergeometric prob | Fisher's exact test
 Raw data | | ordinary permutation test  
+# 5. Step 5 Regression Models
+## 5.1 Linear least squares
+### Background
+- **Centering**: subtract the mean from data points: xi~ = xi - xbar. mean(xi~)=0
+- **Scaling**: divide the data points by empirical standard deviation. sd(xi/s)=1
+- **Normalizing**: centering then scaling. zi=(xi-xbar)/s. zi~N(0,1)
+### Calculation
+```{r}
+fit3 <- lm(price ~ I(carat * 10), data = diamond)
+```
+Plot the fitted regression line
+```{r}
+abline(fit, lwd = 2)
+```
+### Prediction
+```{r}
+predict(fit, newdata = data.frame(carat = newx))
+```
+## 5.2 Residuals
+Model Yi=beta0+beta1*Xi+ei where ei~N(0,sigma^2).
+```{r}
+e <- resid(fit)
+```
+### Residual plot
+```{r}
+g = ggplot(data.frame(x = x, y = resid(lm(y ~ x))), 
+           aes(x = x, y = y))
+g = g + geom_hline(yintercept = 0, size = 2); 
+g = g + geom_point(size = 7, colour = "black", alpha = 0.4)
+g = g + geom_point(size = 5, colour = "red", alpha = 0.4)
+g = g + xlab("X") + ylab("Residual")
+g
+```
+Minor tweak
+```{r}
+diamond$e <- resid(lm(price ~ carat, data = diamond))
+g = ggplot(diamond, aes(x = carat, y = e))
+g = g + xlab("Mass (carats)")
+g = g + ylab("Residual price (SIN $)")
+g = g + geom_hline(yintercept = 0, size = 2)
+g = g + geom_point(size = 7, colour = "black", alpha=0.5)
+g = g + geom_point(size = 5, colour = "blue", alpha=0.2)
+g
+```
+Plot show the variation explained by the regressor
+```{r}
+e = c(resid(lm(price ~ 1, data = diamond)),
+      resid(lm(price ~ carat, data = diamond)))
+fit = factor(c(rep("Itc", nrow(diamond)),
+               rep("Itc, slope", nrow(diamond))))
+g = ggplot(data.frame(e = e, fit = fit), aes(y = e, x = fit, fill = fit))
+g = g + geom_dotplot(binaxis = "y", size = 2, stackdir = "center", binwidth = 20)
+g = g + xlab("Fitting approach")
+g = g + ylab("Residual price")
+g
+```
+### Residual variance
+Manually construct the sigma (estimate)
+```{r}
+sigma <- sqrt(sum(resid(fit)^2) / (n - 2))
+```
+R function
+```{r}
+summary(fit)$sigma
+```
+## 5.3 Inference in regression
+under iid Gaussian errors (betajhat-betaj)/sigmahat follows a t distribution with n-2 degrees of freedom and a normal distribution for large n.  
+  
+Manually contruct the CI
+```{r}
+y <- diamond$price; x <- diamond$carat; n <- length(y)
+beta1 <- cor(y, x) * sd(y) / sd(x)
+beta0 <- mean(y) - beta1 * mean(x)
+e <- y - beta0 - beta1 * x
+sigma <- sqrt(sum(e^2) / (n-2)) 
+ssx <- sum((x - mean(x))^2)
+seBeta0 <- (1 / n + mean(x) ^ 2 / ssx) ^ .5 * sigma 
+seBeta1 <- sigma / sqrt(ssx)
+tBeta0 <- beta0 / seBeta0; tBeta1 <- beta1 / seBeta1
+pBeta0 <- 2 * pt(abs(tBeta0), df = n - 2, lower.tail = FALSE)
+pBeta1 <- 2 * pt(abs(tBeta1), df = n - 2, lower.tail = FALSE)
+coefTable <- rbind(c(beta0, seBeta0, tBeta0, pBeta0), c(beta1, seBeta1, tBeta1, pBeta1))
+colnames(coefTable) <- c("Estimate", "Std. Error", "t value", "P(>|t|)")
+rownames(coefTable) <- c("(Intercept)", "x")
+coefTable
+```
+Semi-manually contruct the CI
+```{r}
+sumCoef <- summary(fit)$coefficients
+sumCoef[1,1] + c(-1, 1) * qt(.975, df = fit$df) * sumCoef[1, 2]
+(sumCoef[2,1] + c(-1, 1) * qt(.975, df = fit$df) * sumCoef[2, 2]) / 10
+```
+R function
+```{r}
+summary(fit)$coefficients
+confint(fit)
+```
+### Prediction interval
+```{r}
+newx = data.frame(x = seq(min(x), max(x), length = 100))
+p1 = data.frame(predict(fit, newdata= newx,interval = ("confidence")))
+p2 = data.frame(predict(fit, newdata = newx,interval = ("prediction")))
+p1$interval = "confidence"
+p2$interval = "prediction"
+p1$x = newx$x
+p2$x = newx$x
+dat = rbind(p1, p2)
+names(dat)[1] = "y"
+```
+- `interval = ("confidence")`: regression line interval
+- `interval = ("prediction")`: y prediction interval, will always be larger than line interval  
+  
+Plot the intervals
+```{r}
+g = ggplot(dat, aes(x = x, y = y))
+g = g + geom_ribbon(aes(ymin = lwr, ymax = upr, fill = interval), alpha = 0.2) 
+g = g + geom_line()
+g = g + geom_point(data = data.frame(x = x, y=y), aes(x = x, y = y), size = 4)
+g
+```
+## 5.4 Multivariable Regression
+### 5.4.1 EDA
+scatterplot matrix/correlation
+```{r}
+library(GGally)
+g = ggpairs(swiss, lower = list(continuous = "smooth"),params = c(method = "loess"))
+g
+```
+violin plot
+```{r}
+g = ggplot(data = InsectSprays, aes(y = count, x = spray, fill  = spray))
+g = g + geom_violin(colour = "black", size = 2)
+g = g + xlab("Type of spray") + ylab("Insect count")
+g
+```
+### 5.4.2 Modelling
+```{r}
+summary(lm(count ~ spray, data = InsectSprays))
+```
+Choose another reference level
+```{r}
+spray2 <- relevel(InsectSprays$spray, "C")
+summary(lm(count ~ spray2, data = InsectSprays))
+```
+Add a interaction term to allow for different slopes and intercepts
+```{r}
+summary(lm(Fertility ~ Agriculture * factor(CatholicBin), data = swiss))$coef
+```
+plot these two lines
+```{r}
+fit = lm(Fertility ~ Agriculture * factor(CatholicBin), data = swiss)
+g1 = g
+g1 = g1 + geom_abline(intercept = coef(fit)[1], slope = coef(fit)[2], size = 2)
+g1 = g1 + geom_abline(intercept = coef(fit)[1] + coef(fit)[3], 
+                          slope = coef(fit)[2] + coef(fit)[4], size = 2)
+g1
+```
+### 5.4.3 Residuals in multivariate regression
+Our estimate of residual variation is sigmahat^2 = sum(ei^2)/(n-p), so that E(sigmahat^2) = sigma^2. p is number of coefficients including intercept.
+#### Residual diagnostics plots
+Can be used to measure model fit and detect outliers
+```{r}
+fit <- lm(Fertility ~ . , data = swiss); plot(fit)
+```
+#### Influence and leverage
+* Do `?influence.measures` to see the full suite of influence measures in stats. The measures include
+  * `rstandard` - standardized residuals, residuals divided by their standard deviations)
+  * `rstudent` - standardized residuals, residuals divided by their standard deviations, where the ith data point was deleted in the calculation of the standard deviation for the residual to follow a t distribution
+  * `hatvalues` - measures of leverage
+    *  tremendously useful in finding data entry errors. If you see some data points that have extremely large hatvalues, not only would they potentially impact your model, but you should look at that row to ascertain whether there was a data entry error.
+  * `dffits` - change in the predicted response when the ith point is deleted in fitting the model.
+  * `dfbetas` - change in individual coefficients when the ith point is deleted in fitting the model.
+  * `cooks.distance` - overall change in the coefficients when the ith point is deleted.
+  * `resid` - returns the ordinary residuals
+  * `resid(fit) / (1 - hatvalues(fit))` where `fit` is the linear model fit returns the PRESS residuals, i.e. the leave one out cross validation residuals - the difference in the response and the predicted response at data point i, where it was not included in the model fitting.
 
+### 5.4.4 Choose the right model (variable inclusion and exclusion)
+- Have to bring in some of the specific subject matter, or clinical scientific subject matter expertise into model building exercise.  
+- Sometimes the treatment and the other regressor are highly related, but merely because they're related things, that it isn't interesting to adjust for x. So the fact that it causes the treatment effect to go away isn't meaningful. If I have systolic blood pressure in a model, and I put diastolic blood pressure in a model as well, that of course, makes the first one go away. But that's not interesting. I know those two blood pressure measurements are highly correlated. Why should I have them both in the model?  
+- omitting a variable that we should have included generally results in bias, unless their regressors are uncorrelated with the omitted ones. 
+  - This is why we randomize treatments, it attempts to uncorrelate our treatment indicator with variables that we don't have to put in the model.
+- introducing unnecessary variables into regression model inflates the standard errors. Especially if we include variables that are unnecessary that are correlated with our variable of interest. 
+- Good design can often eliminate the need for complex model searches at analyses; though often control over the design is limited.
+- If the models of interest are nested and without lots of parameters differentiating them, it's fairly uncontroversial to use nested likelihood ratio tests.
 
+#### Variance inflation factors
+The variance inflation factor (VIF) is the increase in the variance for the ith regressor compared to the ideal setting where it is uncorrelated to the other regressors. 
+```{r}
+library(car)
+fit <- lm(Fertility ~ . , data = swiss)
+vif(fit)
+sqrt(vif(fit))
+```
+#### Residual variance: sigma^2
+- Assuming that the model is linear with additive iid errors (with finite variance), we can mathematically describe the impact of omitting necessary variables or including unnecessary ones. 
+  - If we underfit the model, the variance estimate is biased.
+  - If we correctly or overfit the model, including all necessary covariates and/or unnecessary covariates, the variance estimate is unbiased. 
+    - However, the variance of the variance is larger if we include unnecessary variables.
 
+#### Likelihood ratio tests (nested model testing)
+```{r}
+fit1 <- lm(Fertility ~ Agriculture, data = swiss)
+fit3 <- update(fit, Fertility ~ Agriculture + Examination + Education)
+fit5 <- update(fit, Fertility ~ Agriculture + Examination + Education + Catholic + Infant.Mortality)
+anova(fit1, fit3, fit5)
+```
 ## Data resources
 ### Open Government Sites
 * United Nations [http://data.un.org/](http://data.un.org/)
