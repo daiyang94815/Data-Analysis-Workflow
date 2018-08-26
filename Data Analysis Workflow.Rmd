@@ -2593,6 +2593,164 @@ fit3 <- update(fit, Fertility ~ Agriculture + Examination + Education)
 fit5 <- update(fit, Fertility ~ Agriculture + Examination + Education + Catholic + Infant.Mortality)
 anova(fit1, fit3, fit5)
 ```
+## 5.5 Generalized linear model
+In GLMs, we don't log the outcome itself, or we don't take a transformation of the outcome itself, we take transformation of the mean of the outcome.
+### 5.5.1 Logistic regression
+- Assume that Yi~Bernoulli(mui) so that E(Yi) = mui where 0<=mui<=1.
+- Linear predictor etai = sum(Xik*betak)
+- Link function g(mu)=eta=log(mu/(1-mu)), g is the (natural) log odds, referred to as the logit.
+- Then we can invert the logit function as mui=exp(etai)/(1+exp(etai)), and 1-mui=1/(1+exp(etai))
+- Pr(RWi|RSi,bo,b1)=exp(b0+b1\*RSi)/(1+exp(b0+b1*RSi))
+- log(Pr(RWi|RSi,bo,b1)/(1-Pr(RWi|RSi,bo,b1)))=b0+b1*RSi  
+  
+Calculate the regression
+```{r}
+logRegRavens <- glm(ravensData$ravenWinNum ~ ravensData$ravenScore,family="binomial")
+```
+plot the fitted value
+```{r}
+plot(ravensData$ravenScore,logRegRavens$fitted,pch=19,col="blue",xlab="Score",ylab="Prob Ravens Win")
+```
+Odds ratios and confidence intervals
+```{r}
+exp(logRegRavens$coeff)
+exp(confint(logRegRavens))
+```
+ANOVA for logistic regression
+```{r}
+anova(logRegRavens,test="Chisq")
+```
+It is especially useful if you have a factor variable, because sometimes you want the factor variable included or the factor variable, all levels of the factor variable removed. Then you might want to test whether or not that all levels of them are in total are necessary in the model. Notice that when you do summary and just get the coefficient table out from R, that test each one of the levels of the factor independently and doesn't test them all as a whole. So something like the ANOVA function is useful for putting a factor in and out of the model. 
+#### Interpret Logistic Regression
+- b0: Log odds of a Ravens win if they score zero points
+- b1: Log odds ratio of win probability for each point scored (compared to zero points)
+- exp(b1): Odds ratio of win probability for each point scored (compared to zero points)
+- [FAQ: How do I interpret odds ratios in logistic regression?](https://stats.idre.ucla.edu/other/mult-pkg/faq/general/faq-how-do-i-interpret-odds-ratios-in-logistic-regression/)
+- Odds ratio < 0.5 or > 2 commonly a "moderate effect", but is incredibly dependent on the context
+#### Further resources
+- [Wikipedia on Logistic Regression](http://en.wikipedia.org/wiki/Logistic_regression)
+- [Logistic regression and glms in R](http://data.princeton.edu/R/glms.html)
+- Brian Caffo's lecture notes on: [Simpson's paradox](http://ocw.jhsph.edu/courses/MethodsInBiostatisticsII/PDFs/lecture23.pdf), [Case-control studies](http://ocw.jhsph.edu/courses/MethodsInBiostatisticsII/PDFs/lecture24.pdf)
+- [Open Intro Chapter on Logistic Regression](https://www.openintro.org/stat/videos.php)
+ 
+### 5.5.2 Linear regression on log scale
+- log(NHi)=b0+b1*JDi+ei  
+- E(log(NHi|JDi,b0,b1))=b0+b1*JDi
+  
+Calculate the exp coefficients
+```{r}
+round(exp(coef(lm(I(log(gaData$visits + 1)) ~ gaData$julian))), 5)
+```
+- There's a problem with logs with you have zero counts, adding a constant works  
+#### Interpret the log-scale linear regression (relative)
+- exp(E(log(Y))): geometric mean of Y
+- exp(beta0): estimated geometric mean hits on day 0
+- exp(beta1): estimated relative (percent) increase or decrease in geometric mean hits per day
+### 5.5.3 Poisson regression
+- Assume that Yi~Poisson(mui) so that E(Yi) = mui where 0<=mui.
+- Linear predictor etai = sum(Xik*betak)
+- Link function g(mu)=eta=log(mu)
+- mui=exp(etai)   
+  
+- log(E(NHi|JDi,b0,b1))=b0+b1*JDi
+- E(NHi|JDi,b0,b1)=exp(b0+b1*JDi)
+- avoid problems like taking logs of 0  
+  
+plot the fitted value
+```{r}
+plot(gaData$julian,gaData$visits,pch=19,col="darkgrey",xlab="Julian",ylab="Visits")
+glm1 <- glm(gaData$visits ~ gaData$julian,family="poisson")
+abline(lm1,col="red",lwd=3); lines(gaData$julian,glm1$fitted,col="blue",lwd=3)
+```
+#### Interpret Poisson Regression
+- If JDi is increased by one unit, E(NHi|JDi,b0,b1) is multiplied by exp(b1)
+#### Concern related to mean-variance relationship
+```{r}
+plot(glm1$fitted,glm1$residuals,pch=19,col="grey",ylab="Residuals",xlab="Fitted")
+```
+Variance has to equal the mean for poisson distribution. In the case they are not equal, use:
+- quasi-Poisson model: look at the variance being a constant multiple of the mean, rather than being equal to the mean. 
+- sandwich variance estimator, made famous by generalized estimating equations
+```{r}
+library(sandwich)
+confint(glm1)
+confint.agnostic(glm1)
+```
+#### Proportion/Rate
+- E(NHSSi|JDi,b0,b1)/NHi=exp(b0+b1*JDi)
+- log(E[NHSSi]|JDi,b0,b1)=log(NHi)+b0+b1*JDi
+```{r}
+glm2 <- glm(gaData$simplystats ~ julian(gaData$date),offset=log(visits+1),
+            family="poisson",data=gaData)
+```
+
+```{r}
+glm(count~x+offset(log(t)),family=poisson)
+```
+plot
+```{r}
+plot(julian(gaData$date),glm2$fitted,col="blue",pch=19,xlab="Date",ylab="Fitted Counts")
+points(julian(gaData$date),glm1$fitted,col="red",pch=19)
+```
+
+```{r}
+plot(julian(gaData$date),gaData$simplystats/(gaData$visits+1),col="grey",xlab="Date", ylab="Fitted Rates",pch=19)
+lines(julian(gaData$date),glm2$fitted/(gaData$visits+1),col="blue",lwd=3)
+```
+#### Further resources
+- [Log-linear models and multiway tables](http://ww2.coastal.edu/kingw/statistics/R-tutorials/loglin.html)
+- [Wikipedia on Poisson regression](http://en.wikipedia.org/wiki/Poisson_regression), [Wikipedia on overdispersion](http://en.wikipedia.org/wiki/Overdispersion)
+- [Regression models for count data in R](http://cran.r-project.org/web/packages/pscl/vignettes/countreg.pdf)
+- [pscl package](http://cran.r-project.org/web/packages/pscl/index.html): the function `zeroinfl()` fits zero inflated (zero occurs way more often that it should) models. 
+### 5.5.4 Assumptions on variances
+- For the linear model var(Yi)=sigma^2 is constant.
+- For Bernoulli case var(Yi) = mui*(1-mui)
+- For Poisson case var(Yi)=mui.
+- For data doesn't adhere to the GLM variant structure, it is often relevant to have a more flexible variance model, even if it doesn't correspond to an actual likelihood. These are called 'quasi-likelihood' normal equations. 
+## 5.6 fit functions using linear models
+- Yi=beta0+beta1*Xi+sum(xi-xik)+\*gammak+ei
+  - (a)+=a if a>0 and 0 otherwise
+- The collection of regressors is called a basis
+```{r}
+n <- 500; x <- seq(0, 4 * pi, length = n); y <- sin(x) + rnorm(n, sd = .3)
+knots <- seq(0, 8 * pi, length = 20); 
+splineTerms <- sapply(knots, function(knot) (x > knot) * (x - knot))
+xMat <- cbind(x, splineTerms)
+yhat <- predict(lm(y ~ xMat))
+plot(x, y, frame = FALSE, pch = 21, bg = "lightblue", cex = 2)
+lines(x, yhat, col = "red", lwd = 2)
+```
+### Add squared terms
+- Yi=beta0+beta1\*Xi+beta2\*Xi^2+sum(xi-xik)+^2*gammak+ei
+```{r}
+splineTerms <- sapply(knots, function(knot) (x > knot) * (x - knot)^2)
+xMat <- cbind(x, x^2, splineTerms)
+```
+### Model harmonics using the Fourier basis
+```{r}
+##Chord finder, playing the white keys on a piano from octave c4 - c5
+notes4 <- c(261.63, 293.66, 329.63, 349.23, 392.00, 440.00, 493.88, 523.25)
+t <- seq(0, 2, by = .001); n <- length(t)
+c4 <- sin(2 * pi * notes4[1] * t); e4 <- sin(2 * pi * notes4[3] * t); 
+g4 <- sin(2 * pi * notes4[5] * t)
+chord <- c4 + e4 + g4 + rnorm(n, 0, 0.3)
+x <- sapply(notes4, function(freq) sin(2 * pi * freq * t))
+fit <- lm(chord ~ x - 1)
+```
+
+```{r}
+plot(c(0, 9), c(0, 1.5), xlab = "Note", ylab = "Coef^2", axes = FALSE, frame = TRUE, type = "n")
+axis(2)
+axis(1, at = 1 : 8, labels = c("c4", "d4", "e4", "f4", "g4", "a4", "b4", "c5"))
+for (i in 1 : 8) abline(v = i, lwd = 3, col = grey(.8))
+lines(c(0, 1 : 8, 9), c(0, coef(fit)^2, 0), type = "l", lwd = 3, col = "red")
+```
+
+```{r}
+##(How you would really do it)
+a <- fft(chord); plot(Re(a)^2, type = "l")
+```
+
 ## Data resources
 ### Open Government Sites
 * United Nations [http://data.un.org/](http://data.un.org/)
