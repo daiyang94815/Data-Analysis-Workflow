@@ -2707,7 +2707,7 @@ lines(julian(gaData$date),glm2$fitted/(gaData$visits+1),col="blue",lwd=3)
 - For Bernoulli case var(Yi) = mui*(1-mui)
 - For Poisson case var(Yi)=mui.
 - For data doesn't adhere to the GLM variant structure, it is often relevant to have a more flexible variance model, even if it doesn't correspond to an actual likelihood. These are called 'quasi-likelihood' normal equations. 
-## 5.6 fit functions using linear models
+## 5.6 Fit functions using linear models
 - Yi=beta0+beta1*Xi+sum(xi-xik)+\*gammak+ei
   - (a)+=a if a>0 and 0 otherwise
 - The collection of regressors is called a basis
@@ -2750,6 +2750,89 @@ lines(c(0, 1 : 8, 9), c(0, coef(fit)^2, 0), type = "l", lwd = 3, col = "red")
 ##(How you would really do it)
 a <- fft(chord); plot(Re(a)^2, type = "l")
 ```
+# 6. Step 6 Machine Learning
+## Resources
+- [List of machine learning resources on Quora](http://www.quora.com/Machine-Learning/What-are-some-good-resources-for-learning-about-machine-learning-Why)
+- [List of machine learning resources from Science](http://www.sciencemag.org/site/feature/data/compsci/machine_learning.xhtml)
+- [Advanced notes from MIT open courseware](http://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-867-machine-learning-fall-2006/lecture-notes/)
+- [Advanced notes from CMU](http://www.stat.cmu.edu/~cshalizi/350/)
+- [Kaggle - machine learning competitions](http://www.kaggle.com/)
+## {caret}
+### Functions
+- Some preprocessing (cleaning)
+  - preProcess
+- Data splitting
+  - createDataPartition
+  - createResample
+  - createTimeSlices
+- Training/testing functions
+  - train
+  - predict
+- Model comparison
+  - confusionMatrix
+
+### Data slicing
+```{r}
+library(caret); library(kernlab); data(spam)
+inTrain <- createDataPartition(y=spam$type,
+                              p=0.75, list=FALSE)
+training <- spam[inTrain,]
+testing <- spam[-inTrain,]
+dim(training)
+```
+Cross validation: K-fold
+```{r}
+folds <- createFolds(y=spam$type,k=10,
+                             list=TRUE,returnTrain=TRUE)
+sapply(folds,length)
+folds[[1]][1:10]
+```
+- `list=TRUE` return each set of imbecies corresponding to a particular fold as a set of as a list.  
+- `returnTrain=` choose either to return training set or test set  
+  
+Cross validation: Resampling
+```{r}
+folds <- createResample(y=spam$type,times=10,
+                             list=TRUE)
+sapply(folds,length)
+folds[[1]][1:10]
+```
+Time Slices
+```{r}
+tme <- 1:1000
+folds <- createTimeSlices(y=tme,initialWindow=20,
+                          horizon=10)
+names(folds)
+folds$train[[1]]
+folds$test[[1]]
+```
+### Training options
+
+  
+Fit a model
+```{r}
+modelFit <- train(type ~.,data=training, method="glm")
+modelFit
+```
+Final model
+```{r}
+modelFit <- train(type ~.,data=training, method="glm")
+modelFit$finalModel
+```
+Prediction
+```{r}
+predictions <- predict(modelFit,newdata=testing)
+predictions
+```
+Confusion Matrix
+```{r}
+confusionMatrix(predictions,testing$type)
+```
+### Resources on {caret}
+- Caret tutorials:
+  - [http://www.edii.uclm.es/~useR-2013/Tutorials/kuhn/user_caret_2up.pdf](http://www.edii.uclm.es/~useR-2013/Tutorials/kuhn/user_caret_2up.pdf)
+  - [https://cran.r-project.org/web/packages/caret/vignettes/caret.html](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)
+- [A paper introducing the caret package](http://www.jstatsoft.org/v28/i05/paper)
 
 ## Data resources
 ### Open Government Sites
