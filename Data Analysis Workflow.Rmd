@@ -2807,7 +2807,17 @@ folds$train[[1]]
 folds$test[[1]]
 ```
 ### Training options
-
+- `preProcess =`
+- `weights =` upweight or downweight certain observations. Particularly useful if you have very unbalanced training set where you have a lot more examples of one type than another.
+- `metric =`default metric for factor variable is accuracy that it's trying to maximize. For continuous variables it's the root mean squared error.
+- `trControl = trainControl()`
+#### Metric
+- Continous outcomes:
+  * _RMSE_ = Root mean squared error
+  * _RSquared_ = R^2 from regression models
+- Categorical outcomes:
+  * _Accuracy_ = Fraction correct
+  * _Kappa_ = A measure of [concordance](http://en.wikipedia.org/wiki/Cohen%27s_kappa)
   
 Fit a model
 ```{r}
