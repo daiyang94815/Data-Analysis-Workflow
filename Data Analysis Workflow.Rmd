@@ -2751,14 +2751,13 @@ lines(c(0, 1 : 8, 9), c(0, coef(fit)^2, 0), type = "l", lwd = 3, col = "red")
 a <- fft(chord); plot(Re(a)^2, type = "l")
 ```
 # 6. Step 6 Machine Learning
-## Resources
+## 6.1 Resources
 - [List of machine learning resources on Quora](http://www.quora.com/Machine-Learning/What-are-some-good-resources-for-learning-about-machine-learning-Why)
 - [List of machine learning resources from Science](http://www.sciencemag.org/site/feature/data/compsci/machine_learning.xhtml)
 - [Advanced notes from MIT open courseware](http://ocw.mit.edu/courses/electrical-engineering-and-computer-science/6-867-machine-learning-fall-2006/lecture-notes/)
 - [Advanced notes from CMU](http://www.stat.cmu.edu/~cshalizi/350/)
 - [Kaggle - machine learning competitions](http://www.kaggle.com/)
-## {caret}
-### Functions
+## 6.2 Functions
 - Some preprocessing (cleaning)
   - preProcess
 - Data splitting
@@ -2771,7 +2770,7 @@ a <- fft(chord); plot(Re(a)^2, type = "l")
 - Model comparison
   - confusionMatrix
 
-### Data slicing
+## 6.3 Data slicing
 ```{r}
 library(caret); library(kernlab); data(spam)
 inTrain <- createDataPartition(y=spam$type,
@@ -2806,19 +2805,81 @@ names(folds)
 folds$train[[1]]
 folds$test[[1]]
 ```
-### Training options
+## 6.4 Training options
 - `preProcess =`
 - `weights =` upweight or downweight certain observations. Particularly useful if you have very unbalanced training set where you have a lot more examples of one type than another.
-- `metric =`default metric for factor variable is accuracy that it's trying to maximize. For continuous variables it's the root mean squared error.
+- `metric =` default metric for factor variable is accuracy that it's trying to maximize. For continuous variables it's the root mean squared error.
 - `trControl = trainControl()`
-#### Metric
+### 6.4.1 Metric
 - Continous outcomes:
   * _RMSE_ = Root mean squared error
   * _RSquared_ = R^2 from regression models
 - Categorical outcomes:
   * _Accuracy_ = Fraction correct
   * _Kappa_ = A measure of [concordance](http://en.wikipedia.org/wiki/Cohen%27s_kappa)
-  
+
+### 6.4.2 trainControl
+- `method =` method to use for resampling the data: bootstrapping or cross validation
+- `number =` the number of times to do bootstrapping or cross validation
+- `repeats =` times to repeat that whole process if you want to be careful about repeated cross-validation  
+- `p =` the size of the training set
+- `initialWindow =` for time course data, initial window tells you the size of the number of time points that will be in the training data
+- `horizon =` the number of time points that you'll be predicting
+- `savePredictions =` return the actual predictions themselves from each of the iterations when it's building the model
+- `summaryFunction =` use a different summary function than the default summary if you'd like it to
+- `seeds =` set a seed for each resample, useful for parallel fits
+- `allowParallel = TRUE` if you're training models on large numbers of samples with a high number of predictors, using parallel processing can be highly useful for improving the computational efficiency of your analysis
+#### trainControl resampling
+* _method_
+  * _boot_ = bootstrapping
+  * _boot632_ = bootstrapping with adjustment: reduce some of the bias due to bootstrapping
+  * _cv_ = cross validation
+  * _repeatedcv_ = repeated cross validation: sub cross validation with different random draws
+  * _LOOCV_ = leave one out cross validation
+* _number_
+  * For boot/cross validation
+  * Number of subsamples to take
+* _repeats_
+  * Number of times to repeate subsampling
+  * If big this can _slow things down_
+
+## 6.5 Plot predictors
+### {base}
+#### Tables
+```{r}
+t1 <- table(cutWage,training$jobclass)
+prop.table(t1, margin = 1)
+```
+- `margin =` 1 for row, 2 for column  
+### {caret}
+#### Feature plot
+```{r}
+featurePlot(x=training[,c("age","education","jobclass")],
+            y = training$wage,
+            plot="pairs")
+```
+### {ggplot2}
+#### Regression line
+```{r}
+qq <- qplot(age,wage,colour=education,data=training)
+qq + geom_smooth(method='lm',formula=y~x) # different line for each factor variable (education)
+```
+#### Arrange the display of plots
+```{r}
+p1 <- qplot(cutWage,age, data=training,fill=cutWage,
+      geom=c("boxplot"))
+p2 <- qplot(cutWage,age, data=training,fill=cutWage,
+      geom=c("boxplot","jitter"))
+grid.arrange(p1,p2,ncol=2)
+```
+
+### {hmisc}
+#### cut continuous variable into factor variable
+```{r}
+cutWage <- cut2(training$wage,g=3)
+table(cutWage)
+```
+
 Fit a model
 ```{r}
 modelFit <- train(type ~.,data=training, method="glm")
@@ -2826,7 +2887,6 @@ modelFit
 ```
 Final model
 ```{r}
-modelFit <- train(type ~.,data=training, method="glm")
 modelFit$finalModel
 ```
 Prediction
@@ -2843,6 +2903,7 @@ confusionMatrix(predictions,testing$type)
   - [http://www.edii.uclm.es/~useR-2013/Tutorials/kuhn/user_caret_2up.pdf](http://www.edii.uclm.es/~useR-2013/Tutorials/kuhn/user_caret_2up.pdf)
   - [https://cran.r-project.org/web/packages/caret/vignettes/caret.html](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)
 - [A paper introducing the caret package](http://www.jstatsoft.org/v28/i05/paper)
+- [Model training and tuning](http://caret.r-forge.r-project.org/training.html)
 
 ## Data resources
 ### Open Government Sites
