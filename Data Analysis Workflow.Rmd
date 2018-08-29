@@ -2004,7 +2004,7 @@ abline(c(0,1))
 - the other columns of U or V don't show this pattern as clearly as this first one does.
 ```{r}
 svd1 <- svd(scale(dataMatrixOrdered))
-plot(svd1$u[,1],40:1,,xlab="Row",ylab="First left singular vector",pch=19)
+plot(svd1$u[,1],40:1,xlab="Row",ylab="First left singular vector",pch=19)
 plot(svd1$v[,1],xlab="Column",ylab="First right singular vector",pch=19)
 ```
 #### Components of the SVD - Variance explained
@@ -2916,20 +2916,164 @@ trainCapAveS <- predict(preObj,training[,-58])$capitalAve
 mean(trainCapAveS)
 sd(trainCapAveS)
 ```
-#### Standardizing - `preProcess()` on test set
+`preProcess()` on test set
 ```{r}
 testCapAveS <- predict(preObj,testing[,-58])$capitalAve
 mean(testCapAveS)
 sd(testCapAveS)
 ```
-#### Standardizing - `preProcess =`
+#### `preProcess =`
 ```{r}
 modelFit <- train(type ~.,data=training,
                   preProcess=c("center","scale"),method="glm")
 ```
 - `preProcess=c("center","scale")` center and scale all of the predictors, before using those predictors in the prediction model.
-#### Standardizing - Box-Cox transforms
+#### Box-Cox transforms
+Box cox transforms are a set of transformations that take continuous data, and try to make them look like normal data by estimating a specific set of parameters using maximum likelihood. This is a continuous transform and it doesn't take care of values that are repeated. It does take care of a lot of the problems that would occur with using a variable that's highly skewed. 
+```{r}
+preObj <- preProcess(training[,-58],method=c("BoxCox"))
+trainCapAveS <- predict(preObj,training[,-58])$capitalAve
+par(mfrow=c(1,2)); hist(trainCapAveS); qqnorm(trainCapAveS)
+```
+### 6.6.3 Imputing data
+```{r}
+preObj <- preProcess(training[,-58],method="knnImpute")
+capAve <- predict(preObj,training[,-58])$capAve
+```
+- `method="knnImpute"` K-nearest neighbors computation find the k (say 10) nearest data vectors that look most like data vector with the missing value, and average the values of the variable that's missing and compute them at that position.
 Fit a model
+#### Check the difference between the imputed data and the true data
+```{r}
+# Make some values NA
+training$capAve <- training$capitalAve
+selectNA <- rbinom(dim(training)[1],size=1,prob=0.05)==1
+training$capAve[selectNA] <- NA
+
+# Standardize true values
+capAveTruth <- training$capitalAve
+capAveTruth <- (capAveTruth-mean(capAveTruth))/sd(capAveTruth)
+
+# Checking the difference
+quantile(capAve - capAveTruth)
+quantile((capAve - capAveTruth)[selectNA])
+quantile((capAve - capAveTruth)[!selectNA])
+```
+### 6.6.4 Covariate creation
+#### Level 1: Raw data -> covariates
+- Depends heavily on application. Science is key. Google "feature extraction for [data type]"
+- The balancing act is summarization vs. information loss
+- Examples:
+  - Text files: frequency of words, frequency of phrases ([Google ngrams](https://books.google.com/ngrams)), frequency of capital letters.
+  - Images: Edges, corners, blobs, ridges ([computer vision feature detection](http://en.wikipedia.org/wiki/Feature_detection_(computer_vision)))
+  - Webpages: Number and type of images, position of elements, colors, videos ([A/B Testing](http://en.wikipedia.org/wiki/A/B_testing))
+  - People: Height, weight, hair color, sex, country of origin. 
+- The more knowledge of the system you have the better the job you will do. 
+- When in doubt, err on the side of more features
+- Can be automated, but use caution! In some applications (images, voices) automated feature creation is possible/necessary.
+  - [deep learning tutorial](http://www.cs.nyu.edu/~yann/talks/lecun-ranzato-icml2013.pdf)
+
+#### Level 2: Tidy covariates -> new covariates
+- More necessary for some methods (regression, svms: depend a little bit more on what the distribution of the data are) than for others (classification trees: don't necessarily have as much model-based prediction, don't depend quite so much on the data looking a particular way).
+- Should be done only on the training set
+- The best approach is through exploratory analysis (plotting/tables)
+- New covariates should be added to data frames
+##### Common covariates to add: dummy variables
+```{r}
+table(training$jobclass)
+dummies <- dummyVars(wage ~ jobclass,data=training)
+head(predict(dummies,newdata=training))
+```
+##### Removing zero covariates (variables that have very low variance, e.g. only a few unique values)
+```{r}
+nsv <- nearZeroVar(training,saveMetrics=TRUE)
+nsv
+```
+- `saveMetrics=TRUE` save the metrics so that we can see how it's calculating what the variables are
+##### Fit high degree line: Spline basis
+use the `gam` method in {caret} which allows smoothing of multiple variables
+```{r}
+library(splines)
+bsBasis <- bs(training$age,df=3) 
+bsBasis
+```
+- See also: `ns()`,`poly()`
+```{r}
+lm1 <- lm(wage ~ bsBasis,data=training)
+plot(training$age,training$wage,pch=19,cex=0.5)
+points(training$age,predict(lm1,newdata=training),col="red",pch=19,cex=0.5)
+```
+Splines on the test set
+```{r}
+predict(bsBasis,age=testing$age)
+```
+### 6.6.5 Preprocessing with principal components analysis (PCA)
+#### Find correlated predictors
+```{r}
+M <- abs(cor(training[,-58]))
+diag(M) <- 0
+which(M > 0.8,arr.ind=T)
+```
+
+```{r}
+library(corrplot)
+p.mat <- cor.mtest(mtcars)$p
+corrplot(M, type="lower", order = "hclust", p.mat = p.mat, sig.level = 0.05)
+```
+#### PCA in R: `prcomp()`
+```{r}
+smallSpam <- spam[,c(34,32)]
+prComp <- prcomp(smallSpam)
+plot(prComp$x[,1],prComp$x[,2])
+```
+
+```{r}
+typeColor <- ((spam$type=="spam")*1 + 1)
+prComp <- prcomp(log10(spam[,-58]+1))
+plot(prComp$x[,1],prComp$x[,2],col=typeColor,xlab="PC1",ylab="PC2")
+```
+- log 10 transform+1, to make the data look a little bit more Gaussian (normal looking), because some of the variables are skewed. Often have to do that for principal component analysis to look sensible.  
+  
+Rotation matrix: how it's summing up the two variable to get each of the principal components.
+```{r}
+prComp$rotation
+```
+#### PCA in {caret}
+```{r}
+preProc <- preProcess(log10(spam[,-58]+1),method="pca",pcaComp=2)
+spamPC <- predict(preProc,log10(spam[,-58]+1))
+plot(spamPC[,1],spamPC[,2],col=typeColor)
+```
+- `predict()` if you get a new observation you have to predict what the principle component will look like for that new observation.
+```{r}
+preProc <- preProcess(log10(training[,-58]+1),method="pca",pcaComp=2)
+trainPC <- predict(preProc,log10(training[,-58]+1))
+modelFit <- train(training$type ~ .,method="glm",data=trainPC)
+```
+test the model with PC
+```{r}
+testPC <- predict(preProc,log10(testing[,-58]+1))
+confusionMatrix(testing$type,predict(modelFit,testPC))
+```
+##### Alternative
+```{r}
+modelFit <- train(training$type ~ .,method="glm",preProcess="pca",data=training)
+confusionMatrix(testing$type,predict(modelFit,testing))
+```
+#### Final thoughts on PCA
+- Most useful for linear-type models
+- Can make it harder to interpret predictors
+- Watch out for outliers! 
+  - Transform first (with logs/Box Cox)
+  - Plot predictors to identify problems
+- [Elements of Statistical Learning](http://statweb.stanford.edu/~tibs/ElemStatLearn/)
+
+### 6.6.6 Notes and further reading
+- Training and test must be processed in the same way. Anything you do to the training set will create a set of parameters. You must use only those parameters when you apply them to the test set. 
+- Test transformations will likely be imperfect, especially if the test/training sets collected at different times
+- Careful when transforming factor variables (binary predictors are expected to be not pre-processed)
+- [preprocessing with caret](http://topepo.github.io/caret/pre-processing.html)
+
+
 ```{r}
 modelFit <- train(type ~.,data=training, method="glm")
 modelFit
