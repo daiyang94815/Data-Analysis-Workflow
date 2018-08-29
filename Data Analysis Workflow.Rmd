@@ -2851,6 +2851,10 @@ t1 <- table(cutWage,training$jobclass)
 prop.table(t1, margin = 1)
 ```
 - `margin =` 1 for row, 2 for column  
+#### Histogram
+```{r}
+hist(training$capitalAve,main="",xlab="ave. capital run length")
+```
 ### {caret}
 #### Feature plot
 ```{r}
@@ -2872,14 +2876,59 @@ p2 <- qplot(cutWage,age, data=training,fill=cutWage,
       geom=c("boxplot","jitter"))
 grid.arrange(p1,p2,ncol=2)
 ```
-
+#### Density plots
+```{r}
+qplot(wage,colour=education,data=training,geom="density")
+```
 ### {hmisc}
 #### cut continuous variable into factor variable
 ```{r}
 cutWage <- cut2(training$wage,g=3)
 table(cutWage)
 ```
-
+## 6.6 Preprocessing
+Pre-processing can be more useful often when you're using model based approaches, than when you're using a non-parametric approaches.  
+### 6.6.1 Why preprocess?
+```{r}
+hist(training$capitalAve,main="",xlab="ave. capital run length")
+mean(training$capitalAve)
+sd(training$capitalAve)
+```
+### 6.6.2 Standardizing
+#### Manually standardizing
+```{r}
+trainCapAve <- training$capitalAve
+trainCapAveS <- (trainCapAve  - mean(trainCapAve))/sd(trainCapAve) 
+mean(trainCapAveS)
+sd(trainCapAveS)
+```
+Use the mean and the standard deviation from the training set, to standardize the testing set values.
+```{r}
+testCapAve <- testing$capitalAve
+testCapAveS <- (testCapAve  - mean(trainCapAve))/sd(trainCapAve) 
+mean(testCapAveS)
+sd(testCapAveS)
+```
+#### `preProcess()`
+```{r}
+preObj <- preProcess(training[,-58],method=c("center","scale")) # leave out the outcome variable (the 58th variable)
+trainCapAveS <- predict(preObj,training[,-58])$capitalAve
+mean(trainCapAveS)
+sd(trainCapAveS)
+```
+#### Standardizing - `preProcess()` on test set
+```{r}
+testCapAveS <- predict(preObj,testing[,-58])$capitalAve
+mean(testCapAveS)
+sd(testCapAveS)
+```
+#### Standardizing - `preProcess =`
+```{r}
+modelFit <- train(type ~.,data=training,
+                  preProcess=c("center","scale"),method="glm")
+```
+- `preProcess=c("center","scale")` center and scale all of the predictors, before using those predictors in the prediction model.
+#### Standardizing - Box-Cox transforms
 Fit a model
 ```{r}
 modelFit <- train(type ~.,data=training, method="glm")
@@ -2904,6 +2953,7 @@ confusionMatrix(predictions,testing$type)
   - [https://cran.r-project.org/web/packages/caret/vignettes/caret.html](https://cran.r-project.org/web/packages/caret/vignettes/caret.html)
 - [A paper introducing the caret package](http://www.jstatsoft.org/v28/i05/paper)
 - [Model training and tuning](http://caret.r-forge.r-project.org/training.html)
+- [caret visualizations](http://topepo.github.io/caret/visualizations.html)
 
 ## Data resources
 ### Open Government Sites
