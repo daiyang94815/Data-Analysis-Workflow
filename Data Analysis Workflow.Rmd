@@ -3047,7 +3047,7 @@ plot(spamPC[,1],spamPC[,2],col=typeColor)
 ```{r}
 preProc <- preProcess(log10(training[,-58]+1),method="pca",pcaComp=2)
 trainPC <- predict(preProc,log10(training[,-58]+1))
-modelFit <- train(training$type ~ .,method="glm",data=trainPC)
+modelFit <- train(y = training$type, x = trainPC, method="glm")
 ```
 test the model with PC
 ```{r}
@@ -3071,9 +3071,302 @@ confusionMatrix(testing$type,predict(modelFit,testing))
 - Training and test must be processed in the same way. Anything you do to the training set will create a set of parameters. You must use only those parameters when you apply them to the test set. 
 - Test transformations will likely be imperfect, especially if the test/training sets collected at different times
 - Careful when transforming factor variables (binary predictors are expected to be not pre-processed)
-- [preprocessing with caret](http://topepo.github.io/caret/pre-processing.html)
+- [preprocessing with caret](http://topepo.github.io/caret/pre-processing.html)  
+## 6.7 Predicting
+### 6.7.1 Regression
+#### Manually build a model
+```{r}
+library(caret)
+inTrain <- createDataPartition(y=faithful$waiting,
+                              p=0.5, list=FALSE)
+trainFaith <- faithful[inTrain,]; testFaith <- faithful[-inTrain,]
 
+plot(trainFaith$waiting,trainFaith$eruptions,pch=19,col="blue",xlab="Waiting",ylab="Duration")
+lm1 <- lm(eruptions ~ waiting,data=trainFaith)
+```
+Plot the fitted value against the predictor
+```{r}
+lines(trainFaith$waiting,lm1$fitted,lwd=3)
+```
+Predict with new value
+```{r}
+newdata <- data.frame(waiting=80)
+predict(lm1,newdata)
+```
+test the model fit with test set
+```{r}
+plot(testFaith$waiting,testFaith$eruptions,pch=19,col="blue",xlab="Waiting",ylab="Duration")
+lines(testFaith$waiting,predict(lm1,newdata=testFaith),lwd=3)
+```
+Get training set/test set errors
+```{r}
+# Calculate RMSE on training
+sqrt(sum((lm1$fitted-trainFaith$eruptions)^2))
 
+# Calculate RMSE on test
+sqrt(sum((predict(lm1,newdata=testFaith)-testFaith$eruptions)^2))
+```
+Prediction intervals
+```{r}
+pred1 <- predict(lm1,newdata=testFaith,interval="prediction")
+ord <- order(testFaith$waiting)
+plot(testFaith$waiting,testFaith$eruptions,pch=19,col="blue")
+matlines(testFaith$waiting[ord],pred1[ord,],type="l",col=c(1,2,2),lty = c(1,1,1), lwd=3)
+```
+#### {caret}
+```{r}
+modFit <- train(eruptions ~ waiting,data=trainFaith,method="lm")
+summary(modFit$finalModel)
+```
+
+```{r}
+modFit<- train(wage ~ age + jobclass + education,
+               method = "lm",data=training)
+finMod <- modFit$finalModel
+print(modFit)
+```
+##### (Residual) Diagnostics
+```{r}
+plot(finMod,1,pch=19,cex=0.5,col="#00000010")
+```
+plot the fitted model versus the residuals then coloring it by different variables to identify potential trends. 
+```{r}
+qplot(finMod$fitted,finMod$residuals,colour=race,data=training)
+```
+Residuals shouldn't have any relationship to the order in which the observations appear in your data set. Unless, and this is what's typically you discover when you see a trend like this, or outliers like this at one end of this plot, that there's a relationship with respect to time, or age, or some other continuous variable that the rows are ordered by. It suggests that there's a variable missing from your model. 
+```{r}
+plot(finMod$residuals,pch=19)
+```
+Predicted versus truth in test set, you can explore and try to identify trends that you might have missed. So, for example, here we're looking at the year. 
+```{r}
+pred <- predict(modFit, testing)
+qplot(wage,pred,colour=year,data=testing)
+```
+### 6.7.2 Trees
+#### Measures of impurity
+- Misclassification Error: 1 - phat_mk(m); k(m)= most common class k (1 - the probability that you're equal to the most common class in that particular leaf)
+  - 0 = perfect purity
+  - 0.5 = no purity
+- Gini index: 1-sum(p_mk^2) (1 - sum of the squared probabilities that you belong to any of the different classes)
+  - 0 = perfect purity
+  - 0.5 = no purity
+- Deviance (natural log)/information gain (log2): -sum(p_mk*log2(p_mk))
+  - 0 = perfect purity
+  - 1 = no purity
+- [http://en.wikipedia.org/wiki/Decision_tree_learning](http://en.wikipedia.org/wiki/Decision_tree_learning)
+
+#### Example
+Create training and test sets
+```{r}
+inTrain <- createDataPartition(y=iris$Species,
+                              p=0.7, list=FALSE)
+training <- iris[inTrain,]
+testing <- iris[-inTrain,]
+```
+EDA: Iris petal widths/sepal width
+```{r}
+qplot(Petal.Width,Sepal.Width,colour=Species,data=training)
+```
+Building model
+```{r}
+modFit <- train(Species ~ .,method="rpart",data=training)
+print(modFit$finalModel)
+```
+Plot tree
+```{r}
+plot(modFit$finalModel, uniform=TRUE, 
+      main="Classification Tree")
+text(modFit$finalModel, use.n=TRUE, all=TRUE, cex=.8)
+```
+Prettier plots
+```{r}
+library(rattle)
+fancyRpartPlot(modFit$finalModel)
+```
+Predict new values
+```{r}
+predict(modFit,newdata=testing)
+```
+#### Notes and further resources
+* Classification trees are non-linear models
+  * They use interactions between variables (if you have a large number of classes for a particular variable that you're predicting with. The models can over-fit a little bit.)
+  * Data transformations may be less important (monotone transformations: any transformation that doesn't change the order of the values, but maybe makes them bigger or smaller. Then you will get the same data splits, with the classification or regression trees)
+  * Trees can also be used for regression problems (continuous outcome, use RMSE as a measure of impurity)
+* Note that there are multiple tree building options
+in R both in the caret package - [party](http://cran.r-project.org/web/packages/party/index.html), [rpart](http://cran.r-project.org/web/packages/rpart/index.html) and out of the caret package - [tree](http://cran.r-project.org/web/packages/tree/index.html)
+* [Classification and regression trees](http://www.amazon.com/Classification-Regression-Trees-Leo-Breiman/dp/0412048418)
+
+### 6.7.3 Bootstrap aggregating (bagging)
+- Basic idea:
+  - Resample cases and recalculate predictions
+  - Average or majority vote
+- Notes:
+  - Similar bias
+  - Reduced variance
+  - More useful for non-linear functions
+
+#### Manually bagging
+```{r}
+library(ElemStatLearn)
+ozone <- ozone[order(ozone$ozone),]
+```
+
+```{r}
+ll <- matrix(NA,nrow=10,ncol=155)
+for(i in 1:10){
+  ss <- sample(1:dim(ozone)[1],replace=T)
+  ozone0 <- ozone[ss,]; ozone0 <- ozone0[order(ozone0$ozone),]
+  loess0 <- loess(temperature ~ ozone,data=ozone0,span=0.2)
+  ll[i,] <- predict(loess0,newdata=data.frame(ozone=1:155))
+}
+```
+- `span =` a measure of how smooth that fit will be
+```{r}
+plot(ozone$ozone,ozone$temperature,pch=19,cex=0.5)
+for(i in 1:10){lines(1:155,ll[i,],col="grey",lwd=2)}
+lines(1:155,apply(ll,2,mean),col="red",lwd=2)
+```
+#### {caret}
+- in `train()` consider `method` options: `bagEarth`, `treebag`, `bagFDA`
+- Alternatively you can bag any model you choose using the `bag()` function  
+##### custom bagging
+- Take your predictor variable and put it into one data frame
+```{r}
+predictors = data.frame(ozone=ozone$ozone)
+temperature = ozone$temperature
+treebag <- bag(predictors, temperature, B = 10,
+                bagControl = bagControl(fit = ctreeBag$fit,
+                                        predict = ctreeBag$pred,
+                                        aggregate = ctreeBag$aggregate))
+```
+- `B =` the number of replications with the number of sub samples I'd like to take from the data set
+- `fit =` the function that's going to be applied to fit the model every time. Could be a call to `train()`
+- `predict =` predict new values using a particular model. Could be a call to the `predict()` from a trained model.
+- `aggregate =`  the way that we'll put the predictions together, such as mean
+- `ctreeBag$fit` takes the predictors data frame and the outcome that we've passed, then uses `ctree()` to train a conditional regression tree on the data set, returns model fit
+- `ctreeBag$pred` takes the object from the (`ctree()`) model fit, and a new data set x, and it's going to get a new prediction: Calculates each time the tree response (outcome) from the object and new data; then calculates probability matrix. Returns either the observed levels that it predicts or the predicted response. 
+plot
+- `ctreeBag$aggregate` get the prediction from every model fits across a large number of observations. Then binds them together into one data matrix with each row being equal to the prediction from one of the model predictions. And then it takes the median at every value. So in other words it takes the median prediction from each of the different model fits across all the bootstrap samples. 
+```{r}
+plot(ozone$ozone,temperature,col='lightgrey',pch=19)
+points(ozone$ozone,predict(treebag$fits[[1]]$fit,predictors),pch=19,col="red")
+points(ozone$ozone,predict(treebag,predictors),pch=19,col="blue")
+```
+#### Further resources
+- [Bagging wiki](http://en.wikipedia.org/wiki/Bootstrap_aggregating)
+- [Bagging and boosting](http://stat.ethz.ch/education/semesters/FS_2008/CompStat/sk-ch8.pdf)  
+### 6.7.4 Random Forests
+- Bootstrap samples
+- At each split, bootstrap variables
+- Grow multiple trees and vote  
+  
+**Pros**:
+- Accuracy  
+**Cons**:
+- Speed
+- Interpretability
+- Overfitting (use cross validation `rfcv()`)  
+#### Example
+```{r}
+inTrain <- createDataPartition(y=iris$Species,
+                              p=0.7, list=FALSE)
+training <- iris[inTrain,]
+testing <- iris[-inTrain,]
+```
+
+```{r}
+modFit <- train(Species~ .,data=training,method="rf",prox=TRUE)
+modFit
+```
+- `prox=TRUE` produces a little bit of extra information  
+#####  Look at a specific tree
+```{r}
+getTree(modFit$finalModel,k=2)
+```
+##### Class "centers"
+```{r}
+irisP <- classCenter(training[,c(3,4)], training$Species, modFit$finalModel$prox)
+irisP <- as.data.frame(irisP); irisP$Species <- rownames(irisP)
+p <- qplot(Petal.Width, Petal.Length, col=Species,data=training)
+p + geom_point(aes(x=Petal.Width,y=Petal.Length,col=Species),size=5,shape=4,data=irisP)
+```
+##### Predicting new values
+```{r}
+pred <- predict(modFit,testing)
+table(pred,testing$Species)
+```
+Plot the error prediction
+```{r}
+testing$predRight <- pred==testing$Species
+qplot(Petal.Width,Petal.Length,colour=predRight,data=testing,main="newdata Predictions")
+```
+#### Further resources
+- [Random forests](http://www.stat.berkeley.edu/~breiman/RandomForests/cc_home.htm)
+- [Random forest Wikipedia](http://en.wikipedia.org/wiki/Random_forest)
+- [http://www.robots.ox.ac.uk/~az/lectures/ml/lect5.pdf](http://www.robots.ox.ac.uk/~az/lectures/ml/lect5.pdf)
+### 6.7.5 Boosting
+- Take lots of (possibly) weak predictors
+- Weight them and add them up
+- Get a stronger predictor  
+#### More detail  
+- Start with a set of classifiers h1,...,hk
+  - Examples: All possible trees, all possible regression models, all possible cutoffs.
+- Create a classifier that combines classification functions: f(x)=sgn(sum(alpha_t*h_t(x))).
+  - Goal is to minimize error (on training set)
+  - Iterative, select one h at each step
+  - Calculate weights based on errors
+  - Upweight missed classifications and select next h
+
+#### Boosting in R
+* Boosting can be used with any subset of classifiers
+* One large subclass is [gradient boosting](http://en.wikipedia.org/wiki/Gradient_boosting)
+* R has multiple boosting libraries. Differences include the choice of basic classification functions and combination rules.
+  * [gbm](http://cran.r-project.org/web/packages/gbm/index.html) - boosting with trees.
+  * [mboost](http://cran.r-project.org/web/packages/mboost/index.html) - model based boosting
+  * [ada](http://cran.r-project.org/web/packages/ada/index.html) - statistical boosting based on [additive logistic regression](http://projecteuclid.org/DPubS?service=UI&version=1.0&verb=Display&handle=euclid.aos/1016218223)
+  * [gamBoost](http://cran.r-project.org/web/packages/GAMBoost/index.html) for boosting generalized additive models
+* Most of these are available in the caret package 
+
+#### Example
+```{r}
+library(ISLR)
+Wage <- subset(Wage,select=-c(logwage))
+inTrain <- createDataPartition(y=Wage$wage,
+                              p=0.7, list=FALSE)
+training <- Wage[inTrain,]; testing <- Wage[-inTrain,]
+```
+
+```{r}
+modFit <- train(wage ~ ., method="gbm",data=training,verbose=FALSE)
+print(modFit)
+```
+- `verbose=FALSE`: "gmb" produces a lot of output  
+  
+Plot
+```{r}
+qplot(predict(modFit,testing),wage,data=testing)
+```
+#### Further reading
+* A couple of nice tutorials for boosting
+  * Freund and Shapire - [http://www.cc.gatech.edu/~thad/6601-gradAI-fall2013/boosting.pdf](http://www.cc.gatech.edu/~thad/6601-gradAI-fall2013/boosting.pdf)
+  * Ron Meir- [http://webee.technion.ac.il/people/rmeir/BoostingTutorial.pdf](http://webee.technion.ac.il/people/rmeir/BoostingTutorial.pdf)
+  * [Adaboost on Wikipedia](http://en.wikipedia.org/wiki/AdaBoost)
+* Boosting, random forests, and model ensembling are the most common tools that win Kaggle and other prediction contests. 
+  * [http://www.netflixprize.com/assets/GrandPrize2009_BPC_BigChaos.pdf](http://www.netflixprize.com/assets/GrandPrize2009_BPC_BigChaos.pdf)
+  * [https://kaggle2.blob.core.windows.net/wiki-files/327/09ccf652-8c1c-4a3d-b979-ce2369c985e4/Willem%20Mestrom%20-%20Milestone%201%20Description%20V2%202.pdf](https://kaggle2.blob.core.windows.net/wiki-files/327/09ccf652-8c1c-4a3d-b979-ce2369c985e4/Willem%20Mestrom%20-%20Milestone%201%20Description%20V2%202.pdf)
+  
+### 6.7.6 Model Based Prediction
+- Assume the data follow a probabilistic model
+- Use Bayes' theorem to identify optimal classifiers
+Pros:
+Can take advantage of structure of the data
+May be computationally convenient
+Are reasonably accurate on real problems
+Cons:
+Make additional assumptions about the data
+When the model is incorrect you may get reduced accuracy
+  
+## 6.8 Model building
 ```{r}
 modelFit <- train(type ~.,data=training, method="glm")
 modelFit
