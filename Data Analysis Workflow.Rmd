@@ -3262,6 +3262,7 @@ points(ozone$ozone,predict(treebag,predictors),pch=19,col="blue")
   
 **Pros**:
 - Accuracy  
+  
 **Cons**:
 - Speed
 - Interpretability
