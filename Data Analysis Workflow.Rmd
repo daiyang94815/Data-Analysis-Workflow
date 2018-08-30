@@ -3358,15 +3358,49 @@ qplot(predict(modFit,testing),wage,data=testing)
   
 ### 6.7.6 Model Based Prediction
 - Assume the data follow a probabilistic model
-- Use Bayes' theorem to identify optimal classifiers
-Pros:
-Can take advantage of structure of the data
-May be computationally convenient
-Are reasonably accurate on real problems
-Cons:
-Make additional assumptions about the data
-When the model is incorrect you may get reduced accuracy
+- Use Bayes' theorem to identify optimal classifiers  
   
+**Pros**:
+- Can take advantage of structure of the data
+- May be computationally convenient
+- Are reasonably accurate on real problems  
+  
+**Cons**:
+- Make additional assumptions about the data
+- When the model is incorrect you may get reduced accuracy  
+  
+#### Model based approach
+- Goal: build parametric model for conditional distribution P(Y = k | X = x)
+- A range of models use this approach
+  - Linear discriminant analysis assumes f_k(x) is multivariate Gaussian with same covariances
+  - Quadratic discrimant analysis assumes f_k(x) is multivariate Gaussian with different covariances
+  - [Model based prediction](http://www.stat.washington.edu/mclust/) assumes more complicated versions for the covariance matrix
+  - Naive Bayes assumes independence between features for model building (particularly useful when you have a very large number of features that are binary or categorical variables. Often seen in text classification and classification of other kind of document classification. )
+
+#### Example
+```{r}
+inTrain <- createDataPartition(y=iris$Species,
+                              p=0.7, list=FALSE)
+training <- iris[inTrain,]
+testing <- iris[-inTrain,]
+```
+
+```{r}
+modlda = train(Species ~ .,data=training,method="lda")
+modnb = train(Species ~ ., data=training,method="nb")
+plda = predict(modlda,testing); pnb = predict(modnb,testing)
+```
+Compare the results of different methods
+```{r}
+table(plda,pnb)
+equalPredictions = (plda==pnb)
+qplot(Petal.Width,Sepal.Width,colour=equalPredictions,data=testing)
+```
+#### Further reading
+- [Model based clustering](http://www.stat.washington.edu/raftery/Research/PDF/fraley2002.pdf)
+- [Linear Discriminant Analysis](http://en.wikipedia.org/wiki/Linear_discriminant_analysis)
+- [Quadratic Discriminant Analysis](http://en.wikipedia.org/wiki/Quadratic_classifier)
+- [http://statweb.stanford.edu/~tibs/ElemStatLearn/](http://statweb.stanford.edu/~tibs/ElemStatLearn/)
 ## 6.8 Model building
 ```{r}
 modelFit <- train(type ~.,data=training, method="glm")
