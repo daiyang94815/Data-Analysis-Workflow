@@ -3341,7 +3341,7 @@ training <- Wage[inTrain,]; testing <- Wage[-inTrain,]
 modFit <- train(wage ~ ., method="gbm",data=training,verbose=FALSE)
 print(modFit)
 ```
-- `verbose=FALSE`: "gmb" produces a lot of output  
+- `verbose=FALSE`: "gbm" produces a lot of output  
   
 Plot
 ```{r}
