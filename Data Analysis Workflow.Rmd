@@ -3979,8 +3979,275 @@ pickTrees <- function() {
 ### Resources
 - http://shiny.rstudio.com/articles/gadgets.html
 - http://shiny.rstudio.com/articles/gadget-ui.html
+## 7.3 {googleVis}
+"gvis + ChartType" 
+- Motion charts: `gvisMotionChart`
+- Interactive maps: `gvisGeoChart`
+- Interactive tables: `gvisTable`
+- Line charts: `gvisLineChart`
+- Bar charts: `gvisColumnChart`
+- Tree maps: `gvisTreeMap`  
+http://cran.r-project.org/web/packages/googleVis/googleVis.pdf  
+Embed them in R markdown based documents: Set `results="asis"` in the chunk options.
+```{r}
+suppressPackageStartupMessages(library(googleVis))
+M <- gvisMotionChart(Fruits, "Fruit", "Year",
+                     options=list(width=600, height=400))
+plot(M)
+print(M,"chart")
+print(M, "chart", file='myfilename.html')
+```
+### 7.3.1 Plots on maps
+```{r,dependson="gv",results="asis", cache=TRUE}
+G <- gvisGeoChart(Exports, locationvar="Country",
+                  colorvar="Profit",options=list(width=600, height=400))
+print(G,"chart")
+```
+Specifying a region
+```{r,dependson="gv",results="asis", cache=TRUE}
+G2 <- gvisGeoChart(Exports, locationvar="Country",
+                  colorvar="Profit",options=list(width=600, height=400,region="150"))
+print(G2,"chart")
+```
+Finding parameters to set under `options`: https://developers.google.com/chart/interactive/docs/gallery/geochart  
+  
+Setting more options
+```{r linechart,dependson="gv",results="asis", cache=TRUE}
+df <- data.frame(label=c("US", "GB", "BR"), val1=c(1,3,4), val2=c(23,12,32))
+Line <- gvisLineChart(df, xvar="label", yvar=c("val1","val2"),
+        options=list(title="Hello World", legend="bottom",
+                titleTextStyle="{color:'red', fontSize:18}",                         
+                vAxis="{gridlines:{color:'red', count:3}}",
+                hAxis="{title:'My Label', titleTextStyle:{color:'blue'}}",
+                series="[{color:'green', targetAxisIndex: 0}, 
+                         {color: 'blue',targetAxisIndex:1}]",
+                vAxes="[{title:'Value 1 (%)', format:'##,######%'}, 
+                                  {title:'Value 2 (\U00A3)'}]",                          
+                curveType="function", width=500, height=300                         
+                ))
 
+print(Line,"chart")
+```
+https://github.com/mages/Introduction_to_googleVis/blob/gh-pages/index.Rmd
 
+### 7.3.2 Combining multiple plots together
+```{r multiplot,dependson="gv",results="asis", cache=TRUE}
+G <- gvisGeoChart(Exports, "Country", "Profit",options=list(width=200, height=100))
+T1 <- gvisTable(Exports,options=list(width=200, height=270))
+M <- gvisMotionChart(Fruits, "Fruit", "Year", options=list(width=400, height=370))
+GT <- gvisMerge(G,T1, horizontal=FALSE)
+GTM <- gvisMerge(GT, M, horizontal=TRUE,tableOptions="bgcolor=\"#CCCCCC\" cellspacing=10")
+
+print(GTM,"chart")
+```
+### 7.3.3 Resources
+```{r}
+demo(googleVis)
+```
+- http://cran.r-project.org/web/packages/googleVis/vignettes/googleVis.pdf
+- http://cran.r-project.org/web/packages/googleVis/googleVis.pdf
+- https://developers.google.com/chart/interactive/docs/gallery
+- https://developers.google.com/chart/interactive/faq  
+  
+## 7.4 {plotly}
+Plotly is a web application for creating and sharing data visualizations. Plotly can work with several programming languages and applications including R, Python, and Microsoft Excel.  
+### 7.4.1 Scatterplot
+Specify a scatterplot by indicating `type = "scatter"`. Notice that the arguments for the `x` and `y` variables as specified as formulas, with the tilde operator (`~`) preceding the variable that you're plotting.
+```{r}
+library(plotly)
+plot_ly(mtcars, x = ~wt, y = ~mpg, type = "scatter")
+```
+Add color
+```{r}
+plot_ly(mtcars, x = ~wt, y = ~mpg, type = "scatter", color = ~factor(cyl))
+plot_ly(mtcars, x = ~wt, y = ~mpg, type = "scatter", color = ~disp)
+```
+Add size
+```{r}
+plot_ly(mtcars, x = ~wt, y = ~mpg, type = "scatter", 
+        color = ~factor(cyl), size = ~hp)
+```
+#### 3D Scatterplot
+`type = "scatter3d"`
+```{r}
+temp <- rnorm(100, mean = 30, sd = 5)
+pressue <- rnorm(100)
+dtime <- 1:100
+plot_ly(x = ~temp, y = ~pressue, z = ~dtime,
+        type = "scatter3d", color = ~temp)
+```
+### 7.4.2 Line Graph
+```{r}
+data("airmiles")
+plot_ly(x = ~time(airmiles), y = ~airmiles, type = "scatter", mode = "lines")
+```
+
+```{r}
+data("EuStockMarkets")
+stocks <- as.data.frame(EuStockMarkets) %>%
+  gather(index, price) %>%
+  mutate(time = rep(time(EuStockMarkets), 4))
+plot_ly(stocks, x = ~time, y = ~price, color = ~index, type = "scatter", mode = "lines")
+```
+### 7.4.3 Histogram
+```{r}
+plot_ly(x = ~precip, type = "histogram")
+```
+### 7.4.4 Boxplot
+```{r}
+plot_ly(iris, y = ~Petal.Length, color = ~Species, type = "box")
+```
+### 7.4.5 Heatmap
+```{r}
+terrain1 <- matrix(rnorm(100*100), nrow = 100, ncol = 100)
+plot_ly(z = ~terrain1, type = "heatmap")
+```
+### 7.4.6 3D Surface
+```{r}
+terrain2 <- matrix(sort(rnorm(100*100)), nrow = 100, ncol = 100)
+plot_ly(z = ~terrain2, type = "surface")
+```
+### 7.4.7 Choropleth Maps
+Choropleth maps illustrate data across geographic areas by shading regions with different colors.
+```{r}
+# Create data frame
+state_pop <- data.frame(State = state.abb, Pop = as.vector(state.x77[,1]))
+# Create hover text
+state_pop$hover <- with(state_pop, paste(State, '<br>', "Population:", Pop))
+# Make state borders red
+borders <- list(color = toRGB("red"))
+# Set up some mapping options
+map_options <- list(
+  scope = 'usa',
+  projection = list(type = 'albers usa'),
+  showlakes = TRUE,
+  lakecolor = toRGB('white')
+)
+
+plot_ly(z = ~state_pop$Pop, text = ~state_pop$hover, locations = ~state_pop$State, 
+        type = 'choropleth', locationmode = 'USA-states', 
+        color = state_pop$Pop, colors = 'Blues', marker = list(line = borders)) %>%
+  layout(title = 'US Population in 1975', geo = map_options)
+```
+### 7.4.8 ggplot to plotly
+```{r}
+gg <- ggplotly(p)
+```
+### 7.4.9 Post to plotly website
+```{r}
+plotly_POST(gg)
+```
+### 7.4.10 Resources
+- [The Plolty Website](https://plot.ly/)
+- [The Plotly R API](https://plot.ly/r/)
+- [The Plotly R Package on GitHub](https://github.com/ropensci/plotly)
+- [The Plotly R Cheatsheet](https://images.plot.ly/plotly-documentation/images/r_cheat_sheet.pdf)
+- ["Plotly for R" book by Carson Sievert](https://cpsievert.github.io/plotly_book/)  
+  
+## 7.5 R Markdown
+- `## New Slide`
+- `*** New slide without title`
+- chunk option `comment = ""`: drop "#"  
+  
+## 7.6 {leaflet} for interactive maps
+```{r}
+library(leaflet)
+my_map <- leaflet() %>% 
+  addTiles() %>%
+  addMarkers(lat=39.2980803, lng=-76.5898801, 
+             popup="Jeff Leek's Office")
+```
+If you have a data frame with columns `lat` and `lng` you can pipe that data frame into `leaflet()` to add all the points at once.
+```{r}
+df <- data.frame(lat = runif(20, min = 39.2, max = 39.3),
+                 lng = runif(20, min = -76.6, max = -76.5))
+df %>% 
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers()
+```
+### 7.6.1 Making Custom Markers
+```{r}
+hopkinsIcon <- makeIcon(
+  iconUrl = "http://brand.jhu.edu/content/uploads/2014/06/university.shield.small_.blue_.png",
+  iconWidth = 31*215/230, iconHeight = 31,
+  iconAnchorX = 31*215/230/2, iconAnchorY = 16
+)
+
+hopkinsLatLong <- data.frame(
+  lat = c(39.2973166, 39.3288851, 39.2906617),
+  lng = c(-76.5929798, -76.6206598, -76.5469683))
+
+hopkinsLatLong %>% 
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(icon = hopkinsIcon)
+
+hopkinsSites <- c(
+  "<a href='http://www.jhsph.edu/'>East Baltimore Campus</a>",
+  "<a href='https://apply.jhu.edu/visit/homewood/'>Homewood Campus</a>",
+  "<a href='http://www.hopkinsmedicine.org/johns_hopkins_bayview/'>Bayview Medical Center</a>",
+  "<a href='http://www.peabody.jhu.edu/'>Peabody Institute</a>",
+  "<a href='http://carey.jhu.edu/'>Carey Business School</a>"
+)
+
+hopkinsLatLong %>% 
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(icon = hopkinsIcon, popup = hopkinsSites)
+```
+### 7.6.2 Mapping Clusters
+```{r}
+df <- data.frame(lat = runif(500, min = 39.25, max = 39.35),
+                 lng = runif(500, min = -76.65, max = -76.55))
+df %>% 
+  leaflet() %>%
+  addTiles() %>%
+  addMarkers(clusterOptions = markerClusterOptions())
+```
+### 7.6.3 Mapping Circle Markers
+```{r}
+df <- data.frame(lat = runif(20, min = 39.25, max = 39.35),
+                 lng = runif(20, min = -76.65, max = -76.55))
+df %>% 
+  leaflet() %>%
+  addTiles() %>%
+  addCircleMarkers()
+```
+### 7.6.4 Drawing Circles
+```{r}
+md_cities <- data.frame(name = c("Baltimore", "Frederick", "Rockville", "Gaithersburg", 
+                                 "Bowie", "Hagerstown", "Annapolis", "College Park", "Salisbury", "Laurel"),
+                        pop = c(619493, 66169, 62334, 61045, 55232,
+                                39890, 38880, 30587, 30484, 25346),
+                        lat = c(39.2920592, 39.4143921, 39.0840, 39.1434, 39.0068, 39.6418, 38.9784, 38.9897, 38.3607, 39.0993),
+                        lng = c(-76.6077852, -77.4204875, -77.1528, -77.2014, -76.7791, -77.7200, -76.4922, -76.9378, -75.5994, -76.8483))
+md_cities %>%
+  leaflet() %>%
+  addTiles() %>%
+  addCircles(weight = 1, radius = sqrt(md_cities$pop) * 30)
+```
+### 7.6.5 Drawing Rectangles
+```{r}
+leaflet() %>%
+  addTiles() %>%
+  addRectangles(lat1 = 37.3858, lng1 = -122.0595, 
+                lat2 = 37.3890, lng2 = -122.0625)
+```
+### 7.6.6 Adding Legends
+```{r}
+df <- data.frame(lat = runif(20, min = 39.25, max = 39.35),
+                 lng = runif(20, min = -76.65, max = -76.55),
+                 col = sample(c("red", "blue", "green"), 20, replace = TRUE),
+                 stringsAsFactors = FALSE)
+df %>%
+  leaflet() %>%
+  addTiles() %>%
+  addCircleMarkers(color = df$col) %>%
+  addLegend(labels = LETTERS[1:3], colors = c("blue", "red", "green"))
+```
+### 7.6.7 Resourses
+- http://rstudio.github.io/leaflet/
 
 ## Data resources
 ### Open Government Sites
